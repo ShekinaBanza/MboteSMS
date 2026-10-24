@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mbote SMS</title>
+<meta name="theme-color" content="#070d2b">
+<link rel="icon" href="logo-mark.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--navy:#070d2b;--navy2:#0f1846;--brand:#3b5bff;--violet:#7c3aed;--cyan:#22d3ee;--grad:linear-gradient(135deg,#3b5bff,#7c3aed);
+--bg:#f3f5fb;--panel:#fff;--panel2:#f7f8fd;--ink:#0b1230;--mute:#67708f;--line:#e5e8f2;
+--ok:#10b981;--pend:#f59e0b;--fail:#ef4444;--sched:#8b5cf6;--r:16px;--sh:0 1px 2px rgba(7,13,43,.04),0 10px 30px -14px rgba(7,13,43,.18)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#050a22;--panel:#0b1335;--panel2:#0f1840;--ink:#e9ecfb;--mute:#8d96bd;--line:#1b2556;--sh:none}}
+:root[data-theme="dark"]{--bg:#050a22;--panel:#0b1335;--panel2:#0f1840;--ink:#e9ecfb;--mute:#8d96bd;--line:#1b2556;--sh:none}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:"Plus Jakarta Sans",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+a{color:var(--brand)}
+.app{display:flex;min-height:100vh}
+/* barre latérale */
+aside{width:250px;background:var(--navy);background-image:radial-gradient(120% 50% at 0% 0%,rgba(59,91,255,.25),transparent 60%),radial-gradient(80% 40% at 100% 100%,rgba(124,58,237,.22),transparent 60%);color:#aeb6d9;padding:22px 14px;position:sticky;top:0;height:100vh;flex-shrink:0;display:flex;flex-direction:column;z-index:40}
+.brand{display:flex;align-items:center;gap:11px;margin:0 8px 28px;color:#fff}
+.brand b{font-size:21px;font-weight:800;letter-spacing:-.6px}.brand small{font-size:10px;font-weight:800;letter-spacing:1.4px;padding:3px 8px;border-radius:20px;background:var(--grad);color:#fff}
+.navt{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#5f6894;margin:14px 12px 6px;font-weight:700}
+nav a{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:11px;color:inherit;text-decoration:none;cursor:pointer;margin-bottom:2px;font-weight:600;position:relative;transition:background .15s,color .15s}
+nav a:hover{background:rgba(255,255,255,.05);color:#fff}
+nav a.on{background:rgba(255,255,255,.08);color:#fff}
+nav a.on::before{content:"";position:absolute;left:-14px;top:9px;bottom:9px;width:4px;border-radius:0 4px 4px 0;background:var(--grad)}
+nav a.on svg{color:var(--cyan)}
+.side-foot{margin-top:auto;display:grid;gap:8px}
+.conn{display:flex;align-items:center;gap:9px;font-size:12px;padding:11px 12px;border-radius:12px;background:rgba(255,255,255,.05)}
+.conn b{color:#fff;display:block;font-size:12.5px}
+.dot{width:9px;height:9px;border-radius:50%;background:#5f6894;flex-shrink:0;box-shadow:0 0 0 4px rgba(255,255,255,.05)}.dot.ok{background:var(--ok);box-shadow:0 0 0 4px rgba(16,185,129,.18)}.dot.bad{background:var(--fail);box-shadow:0 0 0 4px rgba(239,68,68,.18)}
+.themebtn{display:flex;align-items:center;gap:9px;background:none;border:0;color:inherit;font:inherit;font-weight:600;font-size:12.5px;padding:8px 12px;border-radius:10px;cursor:pointer}.themebtn:hover{background:rgba(255,255,255,.05);color:#fff}
+/* zone principale */
+main{flex:1;min-width:0}
+.top{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:14px;padding:16px 32px;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.top h1{font-size:20px;margin:0;letter-spacing:-.4px}.top p{margin:0;color:var(--mute);font-size:13px}
+.balpill{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:30px;background:var(--panel);border:1px solid var(--line);font-weight:700;white-space:nowrap}
+.balpill svg{color:var(--brand)}
+.content{padding:26px 32px 60px;max-width:1400px}
+.top .mob,.mob{display:none}
+/* composants */
+.grid{display:grid;gap:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:var(--sh);min-width:0}
+.card h3{margin:0;font-size:15px;letter-spacing:-.2px}.card .ch{display:flex;align-items:center;gap:10px;margin-bottom:16px}.card .ch p{margin:0;color:var(--mute);font-size:12.5px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:11px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;font-weight:700;cursor:pointer;white-space:nowrap;transition:transform .1s,box-shadow .15s,background .15s}
+.btn:hover{background:var(--panel2)}.btn:active{transform:scale(.98)}
+.btn.p{background:var(--grad);border:0;color:#fff;box-shadow:0 8px 20px -8px rgba(59,91,255,.7)}.btn.p:hover{box-shadow:0 10px 26px -8px rgba(59,91,255,.9)}
+.btn.d{color:var(--fail)}.btn.sm{padding:7px 11px;font-size:12.5px;border-radius:9px}.btn.ghost{border-color:transparent;background:none}.btn.ghost:hover{background:var(--panel2)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.sp{flex:1}
+label.f{display:block;font-weight:700;font-size:12.5px;margin:16px 0 7px}
+input,select,textarea{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:11px;background:var(--panel2);color:var(--ink);font:inherit;transition:border .15s,box-shadow .15s}
+textarea{resize:vertical;min-height:120px;line-height:1.5}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 4px rgba(59,91,255,.15)}
+.hint{font-size:12px;color:var(--mute);margin-top:6px}
+.empty{text-align:center;color:var(--mute);padding:40px 16px}.empty svg{width:40px;height:40px;opacity:.4;margin-bottom:8px}
+/* KPI */
+.kpis{grid-template-columns:repeat(5,minmax(0,1fr))}
+.kpi{position:relative;overflow:hidden}
+.kpi .ico{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;margin-bottom:14px}
+.kpi .l{color:var(--mute);font-size:12.5px;font-weight:600}.kpi .v{font-size:27px;font-weight:800;letter-spacing:-.8px;margin-top:2px;line-height:1.2}.kpi .s{font-size:12px;color:var(--mute);margin-top:4px}
+.ico.b{background:rgba(59,91,255,.12);color:var(--brand)}.ico.ok{background:rgba(16,185,129,.13);color:var(--ok)}.ico.pend{background:rgba(245,158,11,.14);color:var(--pend)}.ico.fail{background:rgba(239,68,68,.12);color:var(--fail)}.ico.v{background:rgba(124,58,237,.13);color:var(--violet)}
+.kpi.hero{background:var(--navy);background-image:radial-gradient(120% 90% at 100% 0%,rgba(124,58,237,.55),transparent 55%),radial-gradient(90% 90% at 0% 100%,rgba(59,91,255,.5),transparent 60%);color:#fff;border-color:transparent}
+.kpi.hero .l,.kpi.hero .s{color:#b9c1e6}.kpi.hero .ico{background:rgba(255,255,255,.12);color:#fff}
+/* statuts */
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 8px;border-radius:20px;font-size:11.5px;font-weight:700;white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.pill.ok{background:rgba(16,185,129,.12);color:var(--ok)}.pill.pend{background:rgba(245,158,11,.14);color:#d97706}.pill.fail{background:rgba(239,68,68,.11);color:var(--fail)}.pill.sched{background:rgba(139,92,246,.13);color:var(--sched)}
+.pill.pend::before{animation:pulse 1.4s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.sbar{display:flex;height:8px;border-radius:9px;overflow:hidden;background:var(--line)}.sbar i{display:block;transition:width .4s}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mute);margin-top:8px}.legend span{display:inline-flex;align-items:center;gap:6px}.legend i{width:8px;height:8px;border-radius:50%;display:inline-block}
+/* tableaux */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:var(--mute);font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}tbody tr:hover td{background:var(--panel2)}
+.tw{overflow-x:auto}
+.mono{font-variant-numeric:tabular-nums}
+/* campagnes */
+.camp{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,2fr) auto auto;gap:18px;align-items:center;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:var(--panel);margin-bottom:10px;cursor:pointer;transition:border .15s,box-shadow .15s}
+.camp:hover{border-color:color-mix(in srgb,var(--brand) 45%,var(--line));box-shadow:var(--sh)}
+.camp .n{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.camp .m{font-size:12px;color:var(--mute);margin-top:2px}
+.rate{font-size:22px;font-weight:800;letter-spacing:-.5px;text-align:right}.rate small{display:block;font-size:11px;color:var(--mute);font-weight:600;letter-spacing:0}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:7px 13px;border-radius:30px;border:1px solid var(--line);background:var(--panel);font:inherit;font-weight:600;font-size:12.5px;color:var(--mute);cursor:pointer}
+.chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+:root[data-theme="dark"] .chip.on{background:var(--brand);border-color:var(--brand)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .chip.on{background:var(--brand);border-color:var(--brand)}}
+.chip b{margin-left:4px;opacity:.7}
+/* envoi */
+.sendgrid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:20px;align-items:start}
+.step{display:flex;gap:12px;align-items:center;margin-bottom:6px}
+.step .nb{width:28px;height:28px;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px;flex-shrink:0}
+.counter{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}
+.tagc{font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;background:var(--panel2);border:1px solid var(--line);color:var(--mute)}
+.tagc.warn{color:#d97706;border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.08)}.tagc.ok{color:var(--ok);border-color:rgba(16,185,129,.35);background:rgba(16,185,129,.07)}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:9px}
+.sticky{position:sticky;top:96px}
+.phone{width:250px;margin:0 auto;border-radius:36px;padding:12px;background:var(--navy);box-shadow:0 30px 60px -30px rgba(7,13,43,.6)}
+.screen{border-radius:26px;background:#eef1f8;height:390px;overflow:hidden;display:flex;flex-direction:column}
+.ph-top{background:#fff;padding:20px 14px 12px;text-align:center;border-bottom:1px solid #e2e6f0}
+.ph-av{width:38px;height:38px;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;margin:0 auto 5px;font-weight:800}
+.ph-nm{font-size:12.5px;font-weight:700;color:#0b1230}
+.ph-body{flex:1;padding:14px;overflow:auto}
+.bubble{background:#fff;color:#0b1230;padding:10px 13px;border-radius:16px 16px 16px 4px;font-size:12.5px;white-space:pre-wrap;word-break:break-word;box-shadow:0 1px 2px rgba(0,0,0,.06);max-width:92%}
+.ph-time{font-size:10px;color:#8b93b0;margin:6px 0 0 4px}
+.sum{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}
+.sum div{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}.sum b{display:block;font-size:18px;letter-spacing:-.3px}.sum span{font-size:11.5px;color:var(--mute);font-weight:600}
+.prog{margin-top:14px}.bar{height:8px;background:var(--line);border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--grad);width:0;transition:width .3s}
+/* statuts : explications */
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:0;position:relative;margin:6px 0 4px}
+.flow div{text-align:center;padding:0 8px;position:relative}
+.flow div::after{content:"";position:absolute;top:21px;left:calc(50% + 26px);right:calc(-50% + 26px);height:2px;background:repeating-linear-gradient(90deg,var(--line) 0 6px,transparent 6px 10px)}
+.flow div:last-child::after{display:none}
+.flow .c{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;margin:0 auto 10px}
+.flow b{display:block;font-size:13px}.flow span{font-size:12px;color:var(--mute)}
+.scard{border-left:4px solid;padding-left:16px}
+.scard ul{margin:10px 0 0;padding-left:18px;color:var(--mute);font-size:13px}.scard li{margin-bottom:4px}
+.scard .t{display:flex;gap:10px;align-items:center;margin-bottom:6px}
+.info{display:flex;gap:12px;padding:14px 16px;border-radius:13px;background:rgba(59,91,255,.07);border:1px solid rgba(59,91,255,.2);font-size:13px}
+.info svg{color:var(--brand);margin-top:2px}.info.warn{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.3)}.info.warn svg{color:var(--pend)}.info.good{background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.3)}.info.good svg{color:var(--ok)}
+/* tiroir de détail */
+.drawer{position:fixed;inset:0;z-index:60;display:none}.drawer.on{display:block}
+.drawer .ov{position:absolute;inset:0;background:rgba(5,10,34,.5);backdrop-filter:blur(2px)}
+.drawer .pn{position:absolute;right:0;top:0;bottom:0;width:min(720px,100%);background:var(--bg);overflow:auto;animation:slide .22s ease-out;box-shadow:-20px 0 50px rgba(0,0,0,.2)}
+@keyframes slide{from{transform:translateX(40px);opacity:0}}
+.pn-h{position:sticky;top:0;z-index:2;background:var(--navy);color:#fff;padding:20px 24px;background-image:radial-gradient(100% 120% at 100% 0%,rgba(124,58,237,.5),transparent 60%)}
+.pn-h h2{margin:0;font-size:19px}.pn-h p{margin:3px 0 0;color:#b9c1e6;font-size:12.5px}
+.pn-b{padding:20px 24px}
+.minis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}
+.minis div{background:rgba(255,255,255,.07);border-radius:12px;padding:10px 12px}.minis b{font-size:20px;display:block}.minis span{font-size:11.5px;color:#b9c1e6}
+.reasons div{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:13px}.reasons div:last-child{border:0}
+/* modale, toast */
+.modal{position:fixed;inset:0;background:rgba(5,10,34,.55);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;padding:16px;z-index:70}
+.modal.on{display:flex}.modal .card{max-width:500px;width:100%;max-height:90vh;overflow:auto;animation:pop .18s ease-out}
+@keyframes pop{from{transform:scale(.96);opacity:0}}
+.toasts{position:fixed;right:20px;bottom:20px;z-index:80;display:grid;gap:8px}
+.toast{display:flex;gap:10px;align-items:center;background:var(--navy);color:#fff;padding:12px 16px;border-radius:12px;max-width:380px;box-shadow:0 12px 30px -10px rgba(0,0,0,.4);animation:pop .2s}
+.toast.ok svg{color:var(--ok)}.toast.err svg{color:var(--fail)}.toast.info svg{color:var(--cyan)}
+.view{display:none}.view.on{display:block;animation:fade .2s}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}}
+code{background:var(--panel2);border:1px solid var(--line);padding:1px 6px;border-radius:6px;font-size:12.5px;word-break:break-all}
+.fab{display:none}
+.nbadge{margin-left:auto;background:var(--cyan);color:var(--navy);font-size:11px;font-weight:800;padding:1px 8px;border-radius:20px}
+.k3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.oprow{display:grid;grid-template-columns:110px minmax(0,1fr) 70px 52px;gap:12px;align-items:center;padding:10px 0;border-bottom:1px dashed var(--line)}.oprow:last-child{border:0}
+.opn{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px}.opn i{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.opc{text-align:right;color:var(--mute);font-size:12.5px}.opr{text-align:right;font-weight:800}
+.msgi{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;padding:16px 18px;border-bottom:1px solid var(--line);align-items:start}.msgi:last-child{border:0}
+.msgi.new{background:rgba(34,211,238,.06)}
+.lk{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}.lk div{border-radius:12px;padding:12px;background:var(--panel2);border:1px solid var(--line)}.lk b{font-size:22px;display:block}.lk span{font-size:12px;color:var(--mute);font-weight:600}
+@media(max-width:760px){.msgi{grid-template-columns:auto minmax(0,1fr)}.msgi>.row{grid-column:1/-1}.k3 .kpi .v{font-size:19px}.oprow{grid-template-columns:90px minmax(0,1fr) 44px}.opc{display:none}}
+@media(max-width:1200px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.kpi.hero{grid-column:span 3}}
+@media(max-width:1000px){.c2,.sendgrid{grid-template-columns:1fr!important}.sticky{position:static}.camp{grid-template-columns:1fr auto}.camp .bars{grid-column:1/-1;grid-row:2}.camp .acts{display:none}}
+@media(max-width:760px){aside{position:fixed;left:-260px;transition:left .22s}aside.open{left:0;box-shadow:20px 0 50px rgba(0,0,0,.4)}
+.top{padding:12px 16px}.top p{display:none}.content{padding:16px 16px 90px}.top .mob{display:inline-flex}.balpill{display:none}#topSend{display:none}
+.kpis{grid-template-columns:1fr 1fr}.kpi.hero{grid-column:span 2}.kpi .v{font-size:22px}.flow{grid-template-columns:1fr 1fr;row-gap:18px}.flow div::after{display:none}.minis{grid-template-columns:1fr 1fr}
+.fab{display:inline-flex;position:fixed;right:16px;bottom:16px;z-index:35;border-radius:30px;padding:14px 20px}.pn-b,.pn-h{padding-left:16px;padding-right:16px}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside id="side">
+  <div class="brand">
+    <svg width="38" height="38" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse"><stop stop-color="#3B5BFF"/><stop offset="1" stop-color="#7C3AED"/></linearGradient></defs><rect width="64" height="64" rx="18" fill="url(#lg)"/><path d="M17 17h30a7 7 0 0 1 7 7v15a7 7 0 0 1-7 7H31l-9.5 7.5V46H17a7 7 0 0 1-7-7V24a7 7 0 0 1 7-7z" fill="#fff"/><rect x="20" y="33" width="5.5" height="7" rx="2.75" fill="url(#lg)"/><rect x="29" y="28" width="5.5" height="12" rx="2.75" fill="url(#lg)"/><rect x="38" y="23" width="5.5" height="17" rx="2.75" fill="url(#lg)"/><circle cx="53" cy="13" r="6.5" fill="#22D3EE" stroke="#070D2B" stroke-width="3"/></svg>
+    <b>mbote</b><small>SMS</small>
+  </div>
+  <nav>
+    <div class="navt">Principal</div>
+    <a data-v="dash" class="on"><i data-i="home"></i>Tableau de bord</a>
+    <a data-v="send"><i data-i="send"></i>Nouvelle campagne</a>
+    <a data-v="camp"><i data-i="layers"></i>Campagnes</a>
+    <a data-v="inbox"><i data-i="inbox"></i>Boîte de réception<span class="nbadge" id="inboxBadge" hidden></span></a>
+    <a data-v="logs"><i data-i="search"></i>Journaux SMS</a>
+    <div class="navt">Gestion</div>
+    <a data-v="contacts"><i data-i="users"></i>Contacts</a>
+    <a data-v="status"><i data-i="help"></i>Comprendre les statuts</a>
+    <a data-v="settings"><i data-i="sliders"></i>Paramètres</a>
+  </nav>
+  <div class="side-foot">
+    <button class="themebtn" onclick="cycleTheme()"><i data-i="moon"></i><span id="themeLbl">Thème : système</span></button>
+    <div class="conn"><span class="dot" id="cdot"></span><div><b id="ctext">Connexion…</b><span id="csub">Infobip</span></div></div>
+  </div>
+</aside>
+<main>
+  <div class="top">
+    <button class="btn sm ghost mob" onclick="side.classList.toggle('open')" aria-label="Menu"><i data-i="menu"></i></button>
+    <div><h1 id="ttl">Tableau de bord</h1><p id="tsub">Vue d'ensemble de vos envois</p></div>
+    <div class="sp"></div>
+    <div class="balpill" title="Solde Infobip"><i data-i="wallet"></i><span id="tbal">—</span></div>
+    <button class="btn p" id="topSend" onclick="show('send')"><i data-i="plus"></i>Nouvelle campagne</button>
+  </div>
+<div class="content">
+
+<!-- TABLEAU DE BORD -->
+<section class="view on" id="v-dash">
+  <div class="grid kpis">
+    <div class="card kpi hero"><div class="ico"><i data-i="wallet"></i></div><div class="l">Solde disponible</div><div class="v" id="k-bal">—</div><div class="s" id="k-balsub">Compte Infobip</div></div>
+    <div class="card kpi"><div class="ico b"><i data-i="send"></i></div><div class="l">SMS envoyés</div><div class="v mono" id="k-sent">0</div><div class="s" id="k-camp">0 campagne</div></div>
+    <div class="card kpi"><div class="ico ok"><i data-i="check"></i></div><div class="l">Livrés</div><div class="v mono" id="k-del">0</div><div class="s" id="k-rate">—</div></div>
+    <div class="card kpi"><div class="ico pend"><i data-i="clock"></i></div><div class="l">En attente</div><div class="v mono" id="k-pend">0</div><div class="s">Pas encore confirmés</div></div>
+    <div class="card kpi"><div class="ico fail"><i data-i="alert"></i></div><div class="l">Échecs</div><div class="v mono" id="k-fail">0</div><div class="s" id="k-failsub">Non livrés</div></div>
+  </div>
+  <div class="grid c2" style="grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);margin-top:18px">
+    <div class="card"><div class="ch"><div><h3>Activité des 14 derniers jours</h3><p>Destinataires par jour et par statut</p></div></div><div style="height:250px"><canvas id="ch-days"></canvas></div></div>
+    <div class="card"><div class="ch"><div><h3>Répartition des statuts</h3><p>Toutes campagnes confondues</p></div></div><div style="height:250px;position:relative"><canvas id="ch-status"></canvas><div id="ring" style="position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;padding-bottom:40px"></div></div></div>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <div class="ch"><div><h3>Livraison par opérateur</h3><p>Taux de livraison selon le réseau du destinataire (déduit du préfixe)</p></div></div>
+    <div id="ops"></div>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <div class="ch"><div><h3>Campagnes récentes</h3><p id="lastUpd">Statuts actualisés automatiquement</p></div><div class="sp"></div><button class="btn sm" onclick="refreshCampaigns(true)"><i data-i="refresh"></i>Actualiser</button><button class="btn sm ghost" onclick="show('camp')">Tout voir</button></div>
+    <div id="recent"></div>
+  </div>
+</section>
+
+<!-- NOUVELLE CAMPAGNE -->
+<section class="view" id="v-send">
+  <div class="sendgrid">
+    <div class="grid">
+      <div class="card">
+        <div class="step"><span class="nb">1</span><h3>Destinataires</h3></div>
+        <div class="tools">
+          <select id="s-group" style="flex:1;min-width:180px"><option value="">Ajouter un groupe de contacts…</option></select>
+          <label class="btn sm" style="margin:0"><i data-i="upload"></i>Importer CSV<input type="file" id="s-csv" accept=".csv,.txt" hidden></label>
+          <button class="btn sm" onclick="lookupSend()" title="Détecte les numéros inactifs et l'opérateur réel"><i data-i="shield"></i>Vérifier les numéros</button>
+          <button class="btn sm ghost" onclick="$('s-to').value='';updCount()">Vider</button>
+        </div>
+        <textarea id="s-to" placeholder="Un destinataire par ligne : numéro ou numéro;nom&#10;0812345678;Jean&#10;+243998877665;Marie"></textarea>
+        <div class="counter" id="s-counters"></div>
+      </div>
+      <div class="card">
+        <div class="step"><span class="nb">2</span><h3>Message</h3></div>
+        <label class="f">Expéditeur (Sender ID)</label><input id="s-from" maxlength="15" placeholder="Ex. MaSociete">
+        <div class="hint">11 caractères alphanumériques maximum, ou un numéro. L'expéditeur doit être autorisé par Infobip pour la RDC.</div>
+        <label class="f">Texte du SMS</label>
+        <div class="tools"><select id="s-tpl" style="flex:1;min-width:180px"></select><button class="btn sm" onclick="saveTpl()"><i data-i="file"></i>Enregistrer comme modèle</button><button class="btn sm ghost" title="Supprimer le modèle choisi" onclick="delTpl()"><i data-i="trash"></i></button></div>
+        <textarea id="s-text" style="min-height:150px" placeholder="Bonjour {nom}, …"></textarea>
+        <div class="row" style="margin-top:9px">
+          <button class="btn sm" onclick="insertVar()"><i data-i="user"></i>Insérer {nom}</button>
+          <div class="sp"></div>
+          <div class="counter" id="s-msgc" style="margin:0"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="step"><span class="nb">3</span><h3>Options d'envoi</h3></div>
+        <div class="grid" style="grid-template-columns:1fr 1fr;gap:14px">
+          <div><label class="f">Nom de la campagne</label><input id="s-name" placeholder="Ex. Promo novembre"></div>
+          <div><label class="f">Programmer (optionnel)</label><input type="datetime-local" id="s-at"></div>
+          <div><label class="f">Validité</label><select id="s-valid"><option value="60">1 heure</option><option value="360">6 heures</option><option value="1440">24 heures</option><option value="2880" selected>48 heures (max)</option></select></div>
+          <div><label class="f">Taille des lots</label><select id="s-batch"><option>100</option><option selected>500</option><option>1000</option></select></div>
+        </div>
+        <div class="hint">La validité est le temps pendant lequel l'opérateur réessaie si le téléphone est éteint. Passé ce délai, le SMS devient « Expiré ».</div>
+      </div>
+    </div>
+    <div class="sticky">
+      <div class="card">
+        <div class="ch"><h3>Aperçu</h3><div class="sp"></div><span class="hint" style="margin:0" id="pv-who"></span></div>
+        <div class="phone"><div class="screen"><div class="ph-top"><div class="ph-av" id="pv-av">?</div><div class="ph-nm" id="pv-from">Expéditeur</div></div><div class="ph-body"><div class="bubble" id="pv-text">Votre message apparaîtra ici.</div><div class="ph-time" id="pv-time">Maintenant</div></div></div></div>
+        <div class="sum"><div><b id="sm-n">0</b><span>destinataires</span></div><div><b id="sm-sms">0</b><span>SMS facturés</span></div><div><b id="sm-seg">0</b><span>SMS par personne</span></div><div><b id="sm-cost">—</b><span>coût estimé</span></div></div>
+        <div class="grid" style="gap:8px"><button class="btn p" id="s-go" onclick="confirmSend()"><i data-i="send"></i>Envoyer la campagne</button><button class="btn" onclick="testSend()"><i data-i="phone"></i>Envoyer un test</button></div>
+        <div class="prog" id="s-prog" style="display:none"><div class="bar"><i id="s-bar"></i></div><div class="hint" id="s-ptext"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CAMPAGNES -->
+<section class="view" id="v-camp">
+  <div class="row" style="margin-bottom:16px">
+    <div style="position:relative;flex:1;min-width:200px;max-width:360px"><input id="c-q" placeholder="Rechercher une campagne…" style="padding-left:38px"><span style="position:absolute;left:12px;top:11px;color:var(--mute)"><i data-i="search"></i></span></div>
+    <div class="chips" id="c-chips"></div><div class="sp"></div>
+    <button class="btn" onclick="refreshCampaigns(true)"><i data-i="refresh"></i>Actualiser les statuts</button>
+  </div>
+  <div id="camp-list"></div>
+</section>
+
+<!-- JOURNAUX -->
+<section class="view" id="v-logs">
+  <div class="card">
+    <div class="grid" style="grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:12px;align-items:end">
+      <div><label class="f" style="margin-top:0">Numéro</label><input id="l-to" placeholder="0812345678"></div>
+      <div><label class="f" style="margin-top:0">Bulk ID</label><input id="l-bulk" placeholder="C…-1"></div>
+      <div><label class="f" style="margin-top:0">Statut</label><select id="l-st"><option value="">Tous</option><option value="DELIVERED">Livrés</option><option value="PENDING">En attente</option><option value="UNDELIVERABLE">Non livrables</option><option value="REJECTED">Rejetés</option><option value="EXPIRED">Expirés</option></select></div>
+      <div><label class="f" style="margin-top:0">Limite</label><select id="l-lim"><option>50</option><option selected>200</option><option>500</option><option>1000</option></select></div>
+      <div class="row" style="flex-wrap:nowrap"><button class="btn p" onclick="loadLogs()"><i data-i="search"></i>Rechercher</button><button class="btn" onclick="exportLogs()" title="Exporter"><i data-i="download"></i></button></div>
+    </div>
+    <div class="hint" style="margin-top:10px">Infobip conserve les journaux 48 heures. Pour un historique plus long, consultez vos campagnes (sauvegardées ici) ou le portail Infobip.</div>
+  </div>
+  <div class="card" style="margin-top:18px;padding:8px 10px"><div class="tw" id="logs-tbl"><div class="empty"><i data-i="search"></i><div>Lancez une recherche pour afficher les SMS récents.</div></div></div></div>
+</section>
+
+<!-- CONTACTS -->
+<section class="view" id="v-contacts">
+  <div class="grid c2" style="grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)">
+    <div class="card">
+      <div class="ch"><h3>Créer ou compléter un groupe</h3></div>
+      <label class="f" style="margin-top:0">Nom du groupe</label><input id="g-name" placeholder="Ex. Clients Kinshasa" list="g-names"><datalist id="g-names"></datalist>
+      <label class="f">Contacts (numéro;nom, un par ligne)</label><textarea id="g-list"></textarea>
+      <div class="row" style="margin-top:12px"><label class="btn sm" style="margin:0"><i data-i="upload"></i>Importer CSV<input type="file" id="g-csv" accept=".csv,.txt" hidden></label><div class="sp"></div><button class="btn p" onclick="saveGroup()"><i data-i="check"></i>Enregistrer</button></div>
+    </div>
+    <div class="card"><div class="ch"><h3>Vos groupes</h3><div class="sp"></div><span class="hint" id="g-total" style="margin:0"></span></div><div id="groups"></div></div>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <div class="ch"><div><h3>Liste d'exclusion</h3><p>Ces numéros ne reçoivent jamais vos campagnes. Ceux qui répondent STOP ou ARRET y sont ajoutés automatiquement.</p></div><div class="sp"></div><span class="hint" id="bl-count" style="margin:0"></span></div>
+    <div class="row" style="align-items:flex-start;flex-wrap:nowrap"><textarea id="bl-add" style="min-height:46px;flex:1" placeholder="Numéros à exclure (un par ligne)"></textarea><button class="btn" onclick="addBlockFromInput()"><i data-i="ban"></i>Exclure</button></div>
+    <div class="tw" id="bl-list" style="margin-top:12px;max-height:380px;overflow:auto"></div>
+  </div>
+</section>
+
+<!-- BOÎTE DE RÉCEPTION -->
+<section class="view" id="v-inbox">
+  <div class="grid k3" style="margin-bottom:18px">
+    <div class="card kpi"><div class="ico b"><i data-i="inbox"></i></div><div class="l">Messages reçus</div><div class="v mono" id="ib-total">0</div></div>
+    <div class="card kpi"><div class="ico v"><i data-i="clock"></i></div><div class="l">Aujourd'hui</div><div class="v mono" id="ib-today">0</div></div>
+    <div class="card kpi"><div class="ico fail"><i data-i="ban"></i></div><div class="l">Désabonnements</div><div class="v mono" id="ib-stop">0</div></div>
+  </div>
+  <div class="row" style="margin-bottom:14px">
+    <div style="position:relative;flex:1;min-width:200px;max-width:360px"><input id="ib-q" placeholder="Rechercher un numéro ou un mot…" style="padding-left:38px"><span style="position:absolute;left:12px;top:11px;color:var(--mute)"><i data-i="search"></i></span></div>
+    <div class="sp"></div><button class="btn" onclick="loadInbox(true)"><i data-i="refresh"></i>Actualiser</button>
+  </div>
+  <div id="ib-err"></div>
+  <div class="card" style="padding:0"><div id="inbox-list"></div></div>
+  <div class="info" style="margin-top:18px"><i data-i="radio"></i><div><b>Pour recevoir des SMS</b>, il faut un numéro entrant (numéro long ou code court) loué chez Infobip pour la RDC. Les réponses arrivent ici automatiquement toutes les 2 minutes. Un destinataire qui répond <b>STOP</b>, <b>ARRET</b> ou <b>DESABONNER</b> est exclu de vos prochaines campagnes.<span id="ib-hook"></span></div></div>
+</section>
+
+<!-- COMPRENDRE LES STATUTS -->
+<section class="view" id="v-status">
+  <div class="card">
+    <div class="ch"><div><h3>Le parcours d'un SMS</h3><p>Chaque message passe par ces étapes. Le statut évolue au fil des minutes.</p></div></div>
+    <div class="flow">
+      <div><div class="c ico b"><i data-i="send"></i></div><b>Envoyé</b><span>Le dashboard transmet le SMS à Infobip</span></div>
+      <div><div class="c ico pend"><i data-i="clock"></i></div><b>En attente</b><span>Infobip l'accepte et le remet à l'opérateur (Vodacom, Orange, Airtel, Africell…)</span></div>
+      <div><div class="c ico v"><i data-i="radio"></i></div><b>Accusé de réception</b><span>L'opérateur renvoie la preuve de remise au téléphone</span></div>
+      <div><div class="c ico ok"><i data-i="check"></i></div><b>Livré</b><span>Le SMS est arrivé sur le téléphone du destinataire</span></div>
+    </div>
+  </div>
+  <div class="grid" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-top:18px" id="scards">
+    <div class="card scard" style="border-left-color:var(--ok)"><div class="t"><span class="pill ok">Livré</span></div><b>Le SMS est bien arrivé.</b><ul><li>L'opérateur a confirmé la réception sur le téléphone.</li><li>C'est le seul statut qui prouve la livraison.</li></ul></div>
+    <div class="card scard" style="border-left-color:var(--pend)"><div class="t"><span class="pill pend">En attente</span></div><b>Envoyé, pas encore confirmé.</b><ul><li>Normal pendant les premières secondes ou minutes.</li><li>Téléphone éteint ou hors réseau : l'opérateur réessaie jusqu'à la fin de la validité.</li><li>Si ça dure des heures, l'opérateur ne renvoie peut-être pas d'accusé.</li></ul></div>
+    <div class="card scard" style="border-left-color:var(--fail)"><div class="t"><span class="pill fail">Échec</span></div><b>Le SMS n'est pas arrivé.</b><ul><li><b>Non livrable</b> : numéro inexistant ou refusé par l'opérateur.</li><li><b>Rejeté</b> : bloqué avant l'envoi (crédit, expéditeur non autorisé, numéro invalide). Généralement non facturé.</li><li><b>Expiré</b> : téléphone resté injoignable pendant toute la validité.</li></ul></div>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <div class="ch"><div><h3>Comment le dashboard connaît le statut</h3><p>Il combine trois sources pour rester à jour</p></div></div>
+    <div id="trackState"></div>
+    <div class="tw" style="margin-top:14px"><table><thead><tr><th>Source</th><th>Fonctionnement</th><th>Délai</th></tr></thead><tbody>
+      <tr><td><b>Webhook (temps réel)</b></td><td>Infobip envoie chaque accusé de réception au serveur dès qu'il arrive. Nécessite le dashboard en ligne avec <code>PUBLIC_URL</code>.</td><td>Quelques secondes</td></tr>
+      <tr><td><b>Rapports de livraison</b></td><td>Le dashboard récupère les accusés que le webhook n'a pas reçus.</td><td>Toutes les minutes</td></tr>
+      <tr><td><b>Journaux Infobip</b></td><td>Le dashboard relit l'état de chaque SMS et son prix (48 h max).</td><td>Toutes les minutes</td></tr>
+    </tbody></table></div>
+  </div>
+  <div class="card" style="margin-top:18px"><div class="ch"><h3>Codes détaillés les plus fréquents</h3></div><div class="tw" id="codes"></div></div>
+</section>
+
+<!-- PARAMÈTRES -->
+<section class="view" id="v-settings">
+  <div class="grid c2" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
+    <div class="card">
+      <div class="ch"><h3>Connexion Infobip</h3></div>
+      <label class="f" style="margin-top:0">Mode de connexion</label>
+      <select id="c-mode"><option value="proxy">Via le serveur (recommandé, clé protégée)</option><option value="direct">Direct depuis le navigateur (test local uniquement)</option></select>
+      <div id="c-direct">
+        <label class="f">URL de base API</label><input id="c-base" placeholder="xxxxxx.api.infobip.com">
+        <label class="f">Clé API</label><input id="c-key" type="password" placeholder="Votre clé API">
+        <div class="info warn" style="margin-top:10px"><i data-i="alert"></i><div>En mode direct, la clé est stockée dans ce navigateur. N'utilisez jamais ce mode sur un site public.</div></div>
+      </div>
+      <label class="f">Expéditeur par défaut</label><input id="c-from" maxlength="15">
+      <label class="f">Indicatif pays par défaut</label><input id="c-cc" placeholder="243">
+      <div class="hint">Les numéros qui commencent par 0 sont convertis : 0812345678 → 243812345678.</div>
+      <div class="row" style="margin-top:20px"><button class="btn" onclick="testConn()"><i data-i="radio"></i>Tester</button><div class="sp"></div><button class="btn p" onclick="saveCfg()"><i data-i="check"></i>Enregistrer</button></div>
+    </div>
+    <div class="grid">
+      <div class="card"><div class="ch"><h3>Suivi en temps réel</h3></div><div id="hookState"></div></div>
+      <div class="card">
+        <div class="ch"><h3>Données locales</h3></div>
+        <p class="hint" style="margin-top:0">Campagnes et contacts sont enregistrés dans ce navigateur. Sauvegardez-les régulièrement.</p>
+        <div class="row"><button class="btn" onclick="exportAll()"><i data-i="download"></i>Sauvegarder</button><label class="btn" style="margin:0"><i data-i="upload"></i>Restaurer<input type="file" id="imp" accept=".json" hidden></label><div class="sp"></div><button class="btn d" onclick="wipe()"><i data-i="trash"></i>Effacer l'historique</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+</main>
+</div>
+<button class="btn p fab" onclick="show('send')"><i data-i="plus"></i>Campagne</button>
+
+<div class="drawer" id="drawer"><div class="ov" onclick="closeDrawer()"></div><div class="pn" id="pn"></div></div>
+<div class="modal" id="modal"><div class="card" id="mbody"></div></div>
+<div class="toasts" id="toasts"></div>
+
+<script>
+// ================= icônes =================
+const IC={home:'M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z',send:'M22 2 11 13M22 2l-7 20-4-9-9-4z',layers:'M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5',search:'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.3-4.3',users:'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',user:'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',sliders:'M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6',help:'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01',wallet:'M20 7H5a2 2 0 0 1 0-4h13v4M3 5v14a2 2 0 0 0 2 2h15V7M16 14h.01',check:'M20 6 9 17l-5-5',clock:'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 6v6l4 2',alert:'M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z',refresh:'M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5',upload:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12',download:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3',menu:'M3 6h18M3 12h18M3 18h18',trash:'M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6',moon:'M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z',plus:'M12 5v14M5 12h14',x:'M18 6 6 18M6 6l12 12',phone:'M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM12 18h.01',radio:'M4.9 19.1a10 10 0 0 1 0-14.2M7.8 16.2a6 6 0 0 1 0-8.4M16.2 7.8a6 6 0 0 1 0 8.4M19.1 4.9a10 10 0 0 1 0 14.2M12 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2z',calendar:'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z',ban:'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM4.9 4.9l14.2 14.2',inbox:'M22 12h-6l-2 3h-4l-2-3H2M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z',shield:'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4',file:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h5',reply:'M9 17 4 12l5-5M20 18v-2a4 4 0 0 0-4-4H4'};
+const I=n=>`<svg class="i" viewBox="0 0 24 24"><path d="${IC[n]||''}"/></svg>`;
+function hydrate(root=document){root.querySelectorAll('i[data-i]').forEach(e=>e.outerHTML=I(e.dataset.i))}
+hydrate();
+
+// ================= état =================
+const S={get(k,d){try{const v=localStorage.getItem('ibd_'+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem('ibd_'+k,JSON.stringify(v))}catch(e){toast('Stockage local plein ou indisponible','err')}}};
+let cfg=Object.assign({mode:'proxy',base:'',key:'',from:'',cc:'243',theme:''},S.get('cfg',{}));
+let camps=S.get('camps',[]),groups=S.get('groups',[]),lastLogs=[],srv={webhook:false},lastRefresh=0,cFilter='all';
+const save=()=>S.set('camps',camps);
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>(+n||0).toLocaleString('fr-FR');
+const enc=encodeURIComponent;
+function toast(m,type='info',ms=3800){const t=document.createElement('div');t.className='toast '+type;t.innerHTML=I(type==='ok'?'check':type==='err'?'alert':'radio')+'<span>'+esc(m)+'</span>';$('toasts').appendChild(t);setTimeout(()=>t.remove(),ms)}
+function ago(ts){if(!ts)return'jamais';const s=Math.round((Date.now()-ts)/1000);if(s<60)return'à l\'instant';if(s<3600)return'il y a '+Math.round(s/60)+' min';if(s<86400)return'il y a '+Math.round(s/3600)+' h';return new Date(ts).toLocaleDateString('fr-FR')}
+const dt=d=>d?new Date(d).toLocaleString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+
+// ================= thème =================
+function applyTheme(){cfg.theme?document.documentElement.setAttribute('data-theme',cfg.theme):document.documentElement.removeAttribute('data-theme');$('themeLbl').textContent='Thème : '+({'':'système',light:'clair',dark:'sombre'}[cfg.theme||''])}
+function cycleTheme(){cfg.theme={'':'dark',dark:'light',light:''}[cfg.theme||''];S.set('cfg',cfg);applyTheme();renderDash()}
+applyTheme();
+
+// ================= statuts =================
+const ST={DELIVERED:{l:'Livré',g:'ok'},PENDING:{l:'En attente',g:'pend'},ACCEPTED:{l:'En attente',g:'pend'},SCHEDULED:{l:'Programmé',g:'sched'},UNDELIVERABLE:{l:'Non livrable',g:'fail'},REJECTED:{l:'Rejeté',g:'fail'},EXPIRED:{l:'Expiré',g:'fail'},SENDFAIL:{l:'Non envoyé',g:'fail'}};
+const GL={ok:'Livrés',pend:'En attente',fail:'Échecs',sched:'Programmés'};
+const GC={ok:'#10b981',pend:'#f59e0b',fail:'#ef4444',sched:'#8b5cf6'};
+const grp=g=>(ST[g]||ST.PENDING).g;
+const NAMES={DELIVERED_TO_HANDSET:'Reçu sur le téléphone',DELIVERED_TO_OPERATOR:'Remis à l\'opérateur (sans confirmation du téléphone)',PENDING_ENROUTE:'En route vers l\'opérateur',PENDING_ACCEPTED:'Accepté par Infobip',PENDING_WAITING_DELIVERY:'Attente de livraison (téléphone peut-être éteint)',UNDELIVERABLE_REJECTED_OPERATOR:'Refusé par l\'opérateur',UNDELIVERABLE_NOT_DELIVERED:'Non distribué par l\'opérateur',EXPIRED_EXPIRED:'Téléphone injoignable pendant toute la validité',EXPIRED_DLR_UNKNOWN:'Aucun accusé de réception de l\'opérateur',EXPIRED_UNKNOWN:'Aucun accusé de réception de l\'opérateur',REJECTED_NETWORK:'Réseau non couvert par votre compte',REJECTED_PREFIX_MISSING:'Indicatif pays manquant',REJECTED_DND:'Destinataire en liste « ne pas déranger »',REJECTED_SOURCE:'Expéditeur non autorisé',REJECTED_SENDER:'Expéditeur refusé',REJECTED_NOT_ENOUGH_CREDITS:'Crédit insuffisant',REJECTED_DESTINATION:'Numéro de destination refusé',REJECTED_DESTINATION_NOT_REGISTERED:'Numéro non enregistré (compte d\'essai)',REJECTED_ROUTE_NOT_AVAILABLE:'Aucune route disponible',REJECTED_FLOODING_FILTER:'Trop de messages identiques (anti-spam)',REJECTED_SYSTEM_ERROR:'Erreur système Infobip',REJECTED_INVALID_UDH:'Format de message invalide',REJECTED_MESSAGE_TOO_LONG:'Message trop long',REJECTED_PREPAID_PACKAGE_EXPIRED:'Forfait prépayé expiré'};
+const why=m=>m.err||NAMES[m.status]||m.desc||'';
+const pill=g=>{const s=ST[g]||ST.PENDING;return `<span class="pill ${s.g}">${s.l}</span>`};
+function stats(c){const s={ok:0,pend:0,fail:0,sched:0,cost:0,cur:'',known:0};
+  Object.values(c.msgs||{}).forEach(m=>{s[grp(m.group)]++;s.known++;s.cost+=(+m.price||0);if(m.cur)s.cur=m.cur});
+  s.fail+=(c.sendFail||0);s.total=c.total;s.rate=c.total?Math.round(s.ok/c.total*100):0;s.active=s.pend>0||s.sched>0;return s}
+function sbar(s){const t=Math.max(s.total,1);return `<div class="sbar">${['ok','pend','sched','fail'].map(k=>`<i style="width:${s[k]/t*100}%;background:${GC[k]}"></i>`).join('')}</div>`}
+function legend(s){return `<div class="legend">${['ok','pend','sched','fail'].filter(k=>s[k]||k!=='sched').map(k=>`<span><i style="background:${GC[k]}"></i>${GL[k]} <b style="color:var(--ink)">${fmt(s[k])}</b></span>`).join('')}</div>`}
+
+// ================= API =================
+async function api(path,opts={}){
+  const h={'Content-Type':'application/json','Accept':'application/json'};let url;
+  if(cfg.mode==='direct'){if(!cfg.base||!cfg.key)throw new Error('Renseignez l\'URL et la clé API dans Paramètres');url='https://'+cfg.base.replace(/^https?:\/\//,'').replace(/\/$/,'')+path;h.Authorization='App '+cfg.key}
+  else url='/api'+path;
+  const r=await fetch(url,{...opts,headers:h});const t=await r.text();let j={};try{j=t?JSON.parse(t):{}}catch(e){j={raw:t}}
+  if(!r.ok){const se=j?.requestError?.serviceException;const err=new Error((se?.text||j.error||'Erreur')+' (HTTP '+r.status+')');err.status=r.status;throw err}
+  return j}
+async function local(path){const r=await fetch(path);if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}
+
+// ================= navigation =================
+const TITLES={dash:['Tableau de bord','Vue d\'ensemble de vos envois'],send:['Nouvelle campagne','Préparez, vérifiez et envoyez vos SMS'],camp:['Campagnes','Historique et suivi de livraison'],logs:['Journaux SMS','Les SMS des 48 dernières heures chez Infobip'],inbox:['Boîte de réception','Les SMS que vos contacts vous envoient'],contacts:['Contacts','Vos groupes de destinataires'],status:['Comprendre les statuts','Livré, en attente ou en échec : ce que ça veut dire'],settings:['Paramètres','Connexion et préférences']};
+document.querySelectorAll('nav a').forEach(a=>a.onclick=()=>show(a.dataset.v));
+function show(v){document.querySelectorAll('nav a').forEach(x=>x.classList.toggle('on',x.dataset.v===v));document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v));$('side').classList.remove('open');
+  $('ttl').textContent=TITLES[v][0];$('tsub').textContent=TITLES[v][1];window.scrollTo(0,0);
+  ({dash:renderDash,camp:renderCamps,contacts:()=>{renderGroups();renderBlock()},send:prepSend,settings:fillCfg,status:renderStatusPage,inbox:renderInbox})[v]?.()}
+
+// ================= numéros =================
+function norm(n){let s=String(n).replace(/[^\d+]/g,'');if(s.startsWith('+'))s=s.slice(1);else if(s.startsWith('00'))s=s.slice(2);else if(s.startsWith('0')&&cfg.cc)s=cfg.cc+s.slice(1);else if(cfg.cc&&s.length<=9)s=cfg.cc+s;return s}
+function parseList(txt,skip){const out=[],seen=new Set();let dup=0,inv=0,blk=0;
+  txt.split(/\r?\n/).forEach(l=>{l=l.trim();if(!l)return;const p=l.split(/[;,\t]/);const num=p[0],nom=(p[1]||'').trim();
+    if(!/\d/.test(num))return;const n=norm(num);if(n.length<9||n.length>15){inv++;return}if(seen.has(n)){dup++;return}seen.add(n);if(skip&&blocked[n]){blk++;return}out.push({num:n,nom})});
+  return{list:out,dup,inv,blk}}
+function readFile(input,cb){input.onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>cb(r.result);r.readAsText(f);input.value=''}}
+
+// ================= composition =================
+const GSM="@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !\"#¤%&'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà",EXT="^{}\\[~]|€";
+function segInfo(t){let gsm=true,len=0,bad=[];for(const c of t){if(GSM.includes(c))len++;else if(EXT.includes(c))len+=2;else{gsm=false;if(bad.length<4&&!bad.includes(c))bad.push(c)}}
+  if(!gsm){len=[...t].length;return{enc:'Unicode',len,bad,seg:len===0?0:len<=70?1:Math.ceil(len/67),max:len<=70?70:Math.ceil(len/67)*67}}
+  return{enc:'GSM-7',len,bad,seg:len===0?0:len<=160?1:Math.ceil(len/153),max:len<=160?160:Math.ceil(len/153)*153}}
+function avgPrice(){let p=0,n=0,cur='';camps.forEach(c=>Object.values(c.msgs||{}).forEach(m=>{if(+m.price){p+=+m.price;n++;cur=m.cur}}));return n?{p:p/n,cur}:null}
+function updCount(){
+  const{list,dup,inv,blk}=parseList($('s-to').value,true);
+  const ops={};list.forEach(c=>{const o=opOf(c.num);ops[o]=(ops[o]||0)+1});
+  $('s-counters').innerHTML=`<span class="tagc ${list.length?'ok':''}">${fmt(list.length)} destinataire${list.length>1?'s':''}</span>${dup?`<span class="tagc warn">${dup} doublon${dup>1?'s':''} retiré${dup>1?'s':''}</span>`:''}${inv?`<span class="tagc warn">${inv} numéro${inv>1?'s':''} invalide${inv>1?'s':''}</span>`:''}${blk?`<span class="tagc warn" title="Numéros de la liste d'exclusion">${blk} exclu${blk>1?'s':''} (désabonnés)</span>`:''}${Object.entries(ops).sort((a,b)=>b[1]-a[1]).map(([o,n])=>`<span class="tagc">${o} ${fmt(n)}</span>`).join('')}`;
+  const raw=$('s-text').value,first=list[0],sample=raw.replace(/\{nom\}/g,first?.nom||'Jean');
+  const si=segInfo(raw.replace(/\{nom\}/g,'XXXXXXXX'));
+  $('s-msgc').innerHTML=`<span class="tagc">${si.len} / ${si.max||160}</span><span class="tagc ${si.seg>1?'warn':''}">${si.seg} SMS</span><span class="tagc ${si.enc==='Unicode'?'warn':''}" title="${si.enc==='Unicode'?'Caractères spéciaux : '+esc(si.bad.join(' ')):'Encodage standard'}">${si.enc}</span>`;
+  $('pv-text').textContent=sample||'Votre message apparaîtra ici.';
+  const from=$('s-from').value.trim()||'Expéditeur';$('pv-from').textContent=from;$('pv-av').textContent=from[0].toUpperCase();
+  $('pv-who').textContent=first?'Pour '+(first.nom||'+'+first.num):'';
+  const at=$('s-at').value;$('pv-time').textContent=at?'Programmé · '+dt(at):'Maintenant';
+  $('sm-n').textContent=fmt(list.length);$('sm-seg').textContent=si.seg;$('sm-sms').textContent=fmt(list.length*si.seg);
+  const ap=avgPrice();$('sm-cost').textContent=ap&&list.length?'≈ '+(ap.p*list.length).toFixed(2)+' '+ap.cur:'—';
+}
+['s-to','s-text','s-from','s-at'].forEach(id=>$(id).addEventListener('input',updCount));
+readFile($('s-csv'),t=>{$('s-to').value=($('s-to').value.trim()+'\n'+t).trim();updCount();toast('Fichier importé','ok')});
+$('s-group').onchange=e=>{const g=groups[e.target.value];if(g){$('s-to').value=($('s-to').value.trim()+'\n'+g.contacts.map(c=>c.num+(c.nom?';'+c.nom:'')).join('\n')).trim();updCount();toast('Groupe « '+g.name+' » ajouté','ok')}e.target.value=''};
+function insertVar(){const t=$('s-text'),p=t.selectionStart??t.value.length;t.value=t.value.slice(0,p)+'{nom}'+t.value.slice(t.selectionEnd??p);t.focus();t.selectionStart=t.selectionEnd=p+5;updCount()}
+function prepSend(){$('s-group').innerHTML='<option value="">Ajouter un groupe de contacts…</option>'+groups.map((g,i)=>`<option value="${i}">${esc(g.name)} (${fmt(g.contacts.length)})</option>`).join('');if(!$('s-from').value)$('s-from').value=cfg.from||'';renderTpls();updCount()}
+
+// ================= envoi =================
+function buildMessages(list,text,from,at,valid,cid){const base={from,validityPeriod:+valid||2880,callbackData:cid};if(at)base.sendAt=new Date(at).toISOString();
+  if(srv.notifyUrl&&cfg.mode==='proxy'){base.notifyUrl=srv.notifyUrl;base.notifyContentType='application/json'}
+  if(text.includes('{nom}'))return list.map(c=>({...base,destinations:[{to:c.num}],text:text.replace(/\{nom\}/g,c.nom||'')}));
+  return[{...base,destinations:list.map(c=>({to:c.num})),text}]}
+function chunk(msgs,size){const out=[];let cur=[],cnt=0;
+  for(const m of msgs){for(let i=0;i<m.destinations.length;i+=size){const part={...m,destinations:m.destinations.slice(i,i+size)};
+    if(cnt+part.destinations.length>size&&cur.length){out.push(cur);cur=[];cnt=0}cur.push(part);cnt+=part.destinations.length}}
+  if(cur.length)out.push(cur);return out}
+function confirmSend(){const{list}=parseList($('s-to').value,true),text=$('s-text').value.trim(),from=$('s-from').value.trim();
+  if(!list.length)return toast('Ajoutez au moins un destinataire','err');if(!text)return toast('Le message est vide','err');if(!from)return toast('Indiquez un expéditeur','err');
+  const si=segInfo(text.replace(/\{nom\}/g,'XXXXXXXX')),at=$('s-at').value;
+  if(at&&new Date(at)<new Date())return toast('La date programmée est déjà passée','err');
+  modal(`<div class="ch"><div class="kpi"><div class="ico b" style="margin:0">${I('send')}</div></div><div><h3>Confirmer l'envoi</h3><p>Vérifiez avant d'envoyer, l'opération est facturée.</p></div></div>
+  <div class="sum" style="margin-top:0"><div><b>${fmt(list.length)}</b><span>destinataires</span></div><div><b>${fmt(list.length*si.seg)}</b><span>SMS facturés</span></div></div>
+  <div class="hint" style="margin-bottom:10px">De <b>${esc(from)}</b> · ${at?'programmé le <b>'+dt(at)+'</b>':'envoi immédiat'}${si.enc==='Unicode'?' · <span style="color:#d97706">Unicode : 70 caractères par SMS</span>':''}</div>
+  <div class="bubble" style="max-width:100%;background:var(--panel2);color:var(--ink);border:1px solid var(--line)">${esc(text.replace(/\{nom\}/g,list[0].nom||''))}</div>
+  <div class="row" style="margin-top:18px"><div class="sp"></div><button class="btn" onclick="closeModal()">Annuler</button><button class="btn p" onclick="closeModal();doSend()">${I('send')}Confirmer l'envoi</button></div>`)}
+async function doSend(){const{list}=parseList($('s-to').value,true),text=$('s-text').value.trim(),from=$('s-from').value.trim(),at=$('s-at').value,valid=$('s-valid').value,size=+$('s-batch').value||500;
+  const id='C'+Date.now().toString(36).toUpperCase();const batches=chunk(buildMessages(list,text,from,at,valid,id),size);
+  const c={id,name:$('s-name').value.trim()||'Campagne du '+new Date().toLocaleDateString('fr-FR'),date:new Date().toISOString(),sendAt:at?new Date(at).toISOString():null,from,text,total:list.length,seg:segInfo(text.replace(/\{nom\}/g,'XXXXXXXX')).seg,bulkIds:[],msgs:{},errors:[],sendFail:0,cancelled:false,updated:0};
+  camps.unshift(c);save();
+  $('s-go').disabled=true;$('s-prog').style.display='block';let done=0;
+  for(let i=0;i<batches.length;i++){const bulkId=id+'-'+(i+1),n=batches[i].reduce((a,m)=>a+m.destinations.length,0);
+    try{const r=await api('/sms/2/text/advanced',{method:'POST',body:JSON.stringify({bulkId,messages:batches[i]})});c.bulkIds.push(r.bulkId||bulkId);
+      (r.messages||[]).forEach(m=>c.msgs[m.messageId]={to:m.to,group:at?'SCHEDULED':(m.status?.groupName||'PENDING'),status:m.status?.name||'',desc:m.status?.description||''})}
+    catch(e){c.errors.push('Lot '+(i+1)+' : '+e.message);c.sendFail+=n}
+    done+=n;$('s-bar').style.width=(done/list.length*100)+'%';$('s-ptext').textContent=`Lot ${i+1} sur ${batches.length} · ${fmt(done)} / ${fmt(list.length)} destinataires`;save()}
+  $('s-go').disabled=false;
+  if(c.errors.length&&c.sendFail===list.length)modal(`<div class="ch"><div class="kpi"><div class="ico fail" style="margin:0">${I('alert')}</div></div><h3>L'envoi a échoué</h3></div><p>${c.errors.map(esc).join('<br>')}</p><div class="row"><div class="sp"></div><button class="btn p" onclick="closeModal()">Compris</button></div>`);
+  else{toast(c.errors.length?'Envoyé avec des erreurs sur certains lots':'Campagne envoyée : '+fmt(Object.keys(c.msgs).length)+' SMS acceptés',c.errors.length?'err':'ok',5000);
+    $('s-to').value='';$('s-text').value='';$('s-name').value='';$('s-at').value='';$('s-prog').style.display='none';updCount();show('camp');openDetail(c.id)}
+  loadBalance();setTimeout(()=>refreshCampaign(c).then(rerender),6000);setTimeout(()=>refreshCampaign(c).then(rerender),30000)}
+function testSend(){const from=$('s-from').value.trim(),text=$('s-text').value.trim();if(!from||!text)return toast('Renseignez l\'expéditeur et le message','err');
+  modal(`<div class="ch"><div class="kpi"><div class="ico b" style="margin:0">${I('phone')}</div></div><div><h3>Envoyer un test</h3><p>Recevez le SMS sur votre téléphone avant la campagne.</p></div></div><label class="f">Votre numéro</label><input id="t-num" placeholder="0812345678" inputmode="tel"><div class="row" style="margin-top:16px"><div class="sp"></div><button class="btn" onclick="closeModal()">Annuler</button><button class="btn p" id="t-go">${I('send')}Envoyer</button></div><div id="t-res"></div>`);
+  setTimeout(()=>$('t-num').focus(),50);
+  $('t-go').onclick=async()=>{const n=norm($('t-num').value);if(n.length<9)return toast('Numéro invalide','err');$('t-go').disabled=true;
+    try{const msg={from,destinations:[{to:n}],text:text.replace(/\{nom\}/g,'Test')};if(srv.notifyUrl&&cfg.mode==='proxy'){msg.notifyUrl=srv.notifyUrl;msg.notifyContentType='application/json'}
+      const r=await api('/sms/2/text/advanced',{method:'POST',body:JSON.stringify({messages:[msg]})});const id=r.messages?.[0]?.messageId;
+      $('t-res').innerHTML=`<div class="info" style="margin-top:14px">${I('clock')}<div>Envoyé à +${n}. Statut : <b id="t-st">En attente</b></div></div>`;watchTest(id,r.bulkId,0)}
+    catch(e){$('t-go').disabled=false;$('t-res').innerHTML=`<div class="info warn" style="margin-top:14px">${I('alert')}<div>${esc(e.message)}</div></div>`}}}
+async function watchTest(id,bulk,k){if(!$('t-st')||k>12)return;await new Promise(r=>setTimeout(r,5000));
+  try{let m;if(srv.webhook&&cfg.mode==='proxy'){const r=await local('/local/reports?bulkId='+enc(bulk));m=(r.results||[]).find(x=>x.messageId===id)}
+    if(!m){const r=await api('/sms/1/logs?messageId='+enc(id));m=r.results?.[0]}
+    if(m&&$('t-st')){const g=m.status?.groupName;$('t-st').innerHTML=pill(g)+' '+esc(NAMES[m.status?.name]||'');if(grp(g)!=='pend')return}}catch(e){}
+  watchTest(id,bulk,k+1)}
+
+// ================= suivi des statuts =================
+function put(c,m){const id=m.messageId;if(!id)return;const p=c.msgs[id]||{};const g=m.status?.groupName||'PENDING';
+  const price=m.price?.pricePerMessage,cur=m.price?.currency;
+  if(p.group&&['ok','fail'].includes(grp(p.group))&&grp(g)==='pend'){if(price&&!p.price){p.price=price;p.cur=cur}return}
+  c.msgs[id]={to:m.to||p.to,group:g,status:m.status?.name||p.status||'',desc:m.status?.description||p.desc||'',price:price??p.price??0,cur:cur||p.cur||'',sent:m.sentAt||p.sent,done:m.doneAt||p.done,
+    err:(m.error&&m.error.groupName&&m.error.groupName!=='OK'&&m.error.id)?(m.error.description||m.error.name):''}}
+async function refreshCampaign(c){if(c.cancelled||!c.bulkIds.length)return;
+  if(c.sendAt&&new Date(c.sendAt)>new Date())return;
+  for(const b of c.bulkIds){
+    if(srv.webhook&&cfg.mode==='proxy'){try{(await local('/local/reports?bulkId='+enc(b))).results?.forEach(m=>put(c,m))}catch(e){}}
+    try{(await api('/sms/1/reports?bulkId='+enc(b)+'&limit=1000')).results?.forEach(m=>put(c,m))}catch(e){}
+    try{(await api('/sms/1/logs?bulkId='+enc(b)+'&limit=1000')).results?.forEach(m=>put(c,m))}catch(e){}}
+  c.updated=Date.now();save()}
+let refreshing=false;
+async function refreshCampaigns(manual){if(refreshing)return;refreshing=true;if(manual)toast('Actualisation des statuts…');
+  const todo=camps.filter(c=>Date.now()-new Date(c.sendAt||c.date)<3*864e5&&(stats(c).active||manual));
+  for(const c of todo)await refreshCampaign(c);lastRefresh=Date.now();refreshing=false;rerender();if(manual)toast('Statuts à jour','ok')}
+function rerender(){const v=document.querySelector('.view.on')?.id;if(v==='v-dash')renderDash();if(v==='v-camp')renderCamps();if($('drawer').classList.contains('on'))renderDetail(true)}
+
+// ================= tableau de bord =================
+let chD,chS;
+function renderDash(){let sent=0,ok=0,fail=0,pend=0,sched=0,cost=0,cur='';
+  camps.forEach(c=>{const s=stats(c);sent+=c.total;ok+=s.ok;fail+=s.fail;pend+=s.pend;sched+=s.sched;cost+=s.cost;cur=s.cur||cur});
+  $('k-sent').textContent=fmt(sent);$('k-camp').textContent=camps.length+' campagne'+(camps.length>1?'s':'');
+  $('k-del').textContent=fmt(ok);$('k-rate').innerHTML=sent?`<b style="color:var(--ok)">${Math.round(ok/sent*100)} %</b> de taux de livraison`:'—';
+  $('k-pend').textContent=fmt(pend+sched);$('k-fail').textContent=fmt(fail);$('k-failsub').textContent=cost?'Dépense suivie : '+cost.toFixed(2)+' '+cur:'Non livrés';
+  const css=getComputedStyle(document.documentElement),mute=css.getPropertyValue('--mute').trim(),line=css.getPropertyValue('--line').trim();
+  const days=[],D={ok:[],pend:[],fail:[]};
+  for(let i=13;i>=0;i--){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-i);const e=new Date(d);e.setDate(e.getDate()+1);days.push(d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}));
+    const cs=camps.filter(c=>{const t=new Date(c.sendAt||c.date);return t>=d&&t<e});const t={ok:0,pend:0,fail:0};cs.forEach(c=>{const s=stats(c);t.ok+=s.ok;t.pend+=s.pend+s.sched+Math.max(0,c.total-s.known-(c.sendFail||0));t.fail+=s.fail});
+    Object.keys(D).forEach(k=>D[k].push(t[k]))}
+  if(window.Chart){Chart.defaults.font.family='"Plus Jakarta Sans",sans-serif';Chart.defaults.color=mute;
+    chD&&chD.destroy();chD=new Chart($('ch-days'),{type:'bar',data:{labels:days,datasets:[{label:'Livrés',data:D.ok,backgroundColor:GC.ok},{label:'En attente',data:D.pend,backgroundColor:GC.pend},{label:'Échecs',data:D.fail,backgroundColor:GC.fail}].map(d=>({...d,borderRadius:4,borderSkipped:false,maxBarThickness:26}))},
+      options:{maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{boxWidth:8,boxHeight:8,usePointStyle:true}}},scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,beginAtZero:true,grid:{color:line},border:{display:false},ticks:{precision:0}}}}});
+    chS&&chS.destroy();const tot=ok+pend+sched+fail;
+    chS=new Chart($('ch-status'),{type:'doughnut',data:{labels:['Livrés','En attente','Programmés','Échecs'],datasets:[{data:tot?[ok,pend,sched,fail]:[1],backgroundColor:tot?[GC.ok,GC.pend,GC.sched,GC.fail]:[line],borderWidth:0,spacing:tot?2:0}]},
+      options:{maintainAspectRatio:false,cutout:'74%',plugins:{legend:{display:!!tot,position:'bottom',labels:{boxWidth:8,boxHeight:8,usePointStyle:true}},tooltip:{enabled:!!tot}}}});
+    $('ring').innerHTML=`<div style="text-align:center"><div style="font-size:28px;font-weight:800;letter-spacing:-1px">${tot?Math.round(ok/tot*100):0}%</div><div class="hint" style="margin:0">livrés</div></div>`}
+  $('lastUpd').textContent='Statuts actualisés '+ago(lastRefresh)+(srv.webhook?' · temps réel actif':'');
+  $('ops').innerHTML=opTable(camps.flatMap(c=>Object.values(c.msgs||{})),true);
+  $('recent').innerHTML=camps.length?camps.slice(0,5).map(campCard).join(''):`<div class="empty">${I('send')}<div><b style="color:var(--ink)">Aucune campagne pour l'instant</b></div><p>Envoyez votre premier SMS en masse en quelques clics.</p><button class="btn p" onclick="show('send')">${I('plus')}Créer une campagne</button></div>`}
+async function loadBalance(){try{const b=await api('/account/1/balance');const v=(+b.balance).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' '+b.currency;$('k-bal').textContent=v;$('tbal').textContent=v;$('k-balsub').textContent='Mis à jour à '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});setConn(true)}
+  catch(e){$('k-bal').textContent='—';$('tbal').textContent='—';
+    if(e.status===403){$('k-balsub').innerHTML='Clé API sans accès au solde · <a href="#" style="color:#9fb0ff" onclick="balHelp();return false">Comment corriger</a>';
+      try{await api('/sms/1/logs?limit=1');setConn(true)}catch(e2){setConn(false,e2.message)}}
+    else{$('k-balsub').textContent=e.message;setConn(false,e.message)}}}
+function balHelp(){modal(`<div class="ch"><div class="kpi"><div class="ico pend" style="margin:0">${I('wallet')}</div></div><div><h3>Afficher le solde</h3><p>Infobip refuse la lecture du solde (HTTP 403)</p></div></div>
+  <p style="margin-top:0">Votre clé API fonctionne, mais elle n'a pas la permission de lire le solde. Pour l'ajouter :</p>
+  <ol style="padding-left:20px;line-height:1.8"><li>Ouvrez le portail Infobip, menu <b>Developer Tools → API Keys</b>.</li><li>Modifiez votre clé (ou créez-en une nouvelle).</li><li>Dans <b>API scopes</b>, catégorie <b>Platform</b>, ajoutez la permission de gestion du compte (<code>account-management:manage</code>).</li><li>Vérifiez aussi <code>sms:manage</code> (envoi, journaux, rapports, annulation).</li><li>Enregistrez, puis actualisez cette page.</li></ol>
+  <p class="hint">Si vous créez une nouvelle clé, remplacez-la dans le fichier <code>.env</code> puis redémarrez avec <code>npm start</code>.</p>
+  <div class="row" style="margin-top:14px"><div class="sp"></div><button class="btn p" onclick="closeModal();loadBalance()">${I('refresh')}Réessayer</button></div>`)}
+function setConn(ok,msg){$('cdot').className='dot '+(ok?'ok':'bad');$('ctext').textContent=ok?'Connecté':'Déconnecté';$('csub').textContent=ok?(srv.webhook?'Infobip · temps réel':'Infobip'):'Voir Paramètres';$('ctext').parentElement.title=msg||''}
+
+// ================= campagnes =================
+function campState(c){const s=stats(c);if(c.cancelled)return'cancel';if(c.sendAt&&new Date(c.sendAt)>new Date())return'sched';if(s.pend||(c.total-s.known-(c.sendFail||0))>0)return'run';return'done'}
+function campCard(c){const s=stats(c),st=campState(c);
+  const badge={cancel:'<span class="pill fail">Annulée</span>',sched:'<span class="pill sched">Programmée</span>',run:'<span class="pill pend">En cours</span>',done:'<span class="pill ok">Terminée</span>'}[st];
+  return `<div class="camp" onclick="openDetail('${c.id}')"><div><div class="row" style="gap:8px;flex-wrap:nowrap"><span class="n">${esc(c.name)}</span>${badge}</div><div class="m">${dt(c.date)} · ${esc(c.from)} · ${fmt(c.total)} destinataire${c.total>1?'s':''}${c.sendAt?' · '+I('calendar').replace('class="i"','class="i" style="width:12px;height:12px;vertical-align:-2px"')+' '+dt(c.sendAt):''}</div></div>
+  <div class="bars">${sbar(s)}${legend(s)}</div><div class="rate" style="color:${s.rate>=80?'var(--ok)':s.rate>=40?'var(--ink)':'var(--mute)'}">${s.rate}%<small>livrés</small></div>
+  <div class="acts">${st==='sched'?`<button class="btn sm d" onclick="event.stopPropagation();cancelCamp('${c.id}')">Annuler</button>`:`<button class="btn sm ghost" aria-label="Détail">${I('search')}</button>`}</div></div>`}
+function renderCamps(){const q=($('c-q').value||'').toLowerCase();
+  const cnt={all:camps.length,run:0,sched:0,done:0,fail:0};camps.forEach(c=>{const st=campState(c);if(cnt[st]!=null)cnt[st]++;if(stats(c).fail)cnt.fail++});
+  $('c-chips').innerHTML=[['all','Toutes'],['run','En cours'],['sched','Programmées'],['done','Terminées'],['fail','Avec échecs']].map(([k,l])=>`<button class="chip ${cFilter===k?'on':''}" onclick="cFilter='${k}';renderCamps()">${l}<b>${cnt[k]}</b></button>`).join('');
+  const list=camps.filter(c=>(!q||c.name.toLowerCase().includes(q)||c.text.toLowerCase().includes(q))&&(cFilter==='all'||(cFilter==='fail'?stats(c).fail>0:campState(c)===cFilter)));
+  $('camp-list').innerHTML=list.length?list.map(campCard).join(''):`<div class="card empty">${I('layers')}<div>${camps.length?'Aucune campagne ne correspond.':'Aucune campagne pour l\'instant.'}</div></div>`}
+$('c-q').oninput=renderCamps;
+async function cancelCamp(id){const c=camps.find(x=>x.id===id);
+  modal(`<div class="ch"><div class="kpi"><div class="ico fail" style="margin:0">${I('ban')}</div></div><div><h3>Annuler la campagne ?</h3><p>${esc(c.name)} · ${fmt(c.total)} destinataires</p></div></div><p class="hint">Les SMS programmés ne seront pas envoyés. Cette action est définitive.</p><div class="row" style="margin-top:16px"><div class="sp"></div><button class="btn" onclick="closeModal()">Garder</button><button class="btn p" style="background:var(--fail);box-shadow:none" id="cc-go">Annuler la campagne</button></div>`);
+  $('cc-go').onclick=async()=>{closeModal();let ok=0;
+    for(const b of c.bulkIds){try{await api('/sms/1/bulks/status?bulkId='+enc(b),{method:'PUT',body:JSON.stringify({status:'CANCELED'})});ok++}catch(e){toast(e.message,'err',6000)}}
+    if(ok){c.cancelled=true;save();rerender();toast('Campagne annulée','ok')}}}
+
+// ================= détail =================
+let dS={id:null,f:'all',q:''};
+function openDetail(id){dS={id,f:'all',q:''};$('drawer').classList.add('on');renderDetail();const c=camps.find(x=>x.id===id);if(c&&stats(c).active)refreshCampaign(c).then(()=>renderDetail(true))}
+function closeDrawer(){$('drawer').classList.remove('on')}
+function renderDetail(soft){const c=camps.find(x=>x.id===dS.id);if(!c)return closeDrawer();const s=stats(c);
+  const reasons={};Object.values(c.msgs).forEach(m=>{if(grp(m.group)==='fail'){const r=why(m)||ST[m.group]?.l||m.group;reasons[r]=(reasons[r]||0)+1}});
+  if(c.sendFail)reasons['Lot refusé par l\'API (voir erreurs)']=c.sendFail;
+  const top=Object.entries(reasons).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const pendLong=s.pend&&Date.now()-new Date(c.sendAt||c.date)>6*3600e3;
+  const body=`<div class="pn-h"><div class="row" style="flex-wrap:nowrap"><div style="min-width:0"><h2>${esc(c.name)}</h2><p>${dt(c.date)} · de ${esc(c.from)} · ${c.seg} SMS/pers. ${c.updated?'· actualisé '+ago(c.updated):''}</p></div><div class="sp"></div><button class="btn sm" style="background:rgba(255,255,255,.1);border:0;color:#fff" onclick="closeDrawer()" aria-label="Fermer">${I('x')}</button></div>
+    <div class="minis"><div><b>${s.rate}%</b><span>taux de livraison</span></div><div><b style="color:#34d399">${fmt(s.ok)}</b><span>livrés</span></div><div><b style="color:#fbbf24">${fmt(s.pend+s.sched)}</b><span>en attente</span></div><div><b style="color:#f87171">${fmt(s.fail)}</b><span>échecs</span></div></div>
+    <div style="margin-top:14px">${sbar(s)}</div></div>
+  <div class="pn-b">
+    <div class="row" style="margin-bottom:16px"><button class="btn sm" onclick="refreshCampaign(camps.find(x=>x.id==='${c.id}')).then(()=>{renderDetail(true);toast('Statuts à jour','ok')})">${I('refresh')}Actualiser</button><button class="btn sm" onclick="exportCamp('${c.id}')">${I('download')}Exporter CSV</button><button class="btn sm" onclick="resend('${c.id}')">${I('send')}Renvoyer aux échecs</button><div class="sp"></div>${campState(c)==='sched'?`<button class="btn sm" onclick="reschedule('${c.id}')">${I('calendar')}Reprogrammer</button><button class="btn sm d" onclick="cancelCamp('${c.id}')">Annuler</button>`:''}</div>
+    ${campState(c)==='sched'?`<div class="info" style="margin-bottom:14px">${I('calendar')}<div>Programmée pour le <b>${dt(c.sendAt)}</b>. Les statuts apparaîtront après l'envoi.</div></div>`:''}
+    ${pendLong?`<div class="info warn" style="margin-bottom:14px">${I('clock')}<div><b>${fmt(s.pend)} SMS sont en attente depuis plus de 6 h.</b> Les téléphones sont peut-être éteints, ou l'opérateur ne renvoie pas d'accusé de réception. Ils passeront en « Expiré » à la fin de la validité.</div></div>`:''}
+    ${c.errors.length?`<div class="info warn" style="margin-bottom:14px">${I('alert')}<div>${c.errors.map(esc).join('<br>')}</div></div>`:''}
+    <div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-bottom:16px">
+      <div class="card" style="padding:16px"><div class="hint" style="margin:0 0 8px;font-weight:700">Message</div><div style="white-space:pre-wrap;font-size:13px;max-height:140px;overflow:auto">${esc(c.text)}</div></div>
+      <div class="card" style="padding:16px"><div class="hint" style="margin:0 0 4px;font-weight:700">Principales causes d'échec</div><div class="reasons">${top.length?top.map(([r,n])=>`<div><span>${esc(r)}</span><b>${fmt(n)}</b></div>`).join(''):'<div><span class="hint" style="margin:0">Aucun échec</span></div>'}</div></div>
+    </div>
+    ${campState(c)==='sched'?'':opTable(Object.values(c.msgs))}
+    <div class="row" style="margin-bottom:10px"><div class="chips" id="d-chips"></div><div class="sp"></div><input id="d-q" placeholder="Rechercher un numéro" style="max-width:200px;padding:8px 12px" value="${esc(dS.q)}"></div>
+    <div class="card" style="padding:4px 8px"><div class="tw" id="d-rows"></div></div>
+  </div>`;
+  const sc=$('pn').scrollTop;$('pn').innerHTML=body;if(soft)$('pn').scrollTop=sc;
+  $('d-q').oninput=e=>{dS.q=e.target.value;detailRows()};detailRows()}
+function detailRows(){const c=camps.find(x=>x.id===dS.id),s=stats(c),q=dS.q.replace(/\D/g,'');
+  $('d-chips').innerHTML=[['all','Tous',s.known],['ok','Livrés',s.ok],['pend','En attente',s.pend+s.sched],['fail','Échecs',s.fail-(c.sendFail||0)]].map(([k,l,n])=>`<button class="chip ${dS.f===k?'on':''}" onclick="dS.f='${k}';detailRows()">${l}<b>${fmt(n)}</b></button>`).join('');
+  const rows=Object.entries(c.msgs).filter(([k,m])=>{const g=grp(m.group);return(dS.f==='all'||g===dS.f||(dS.f==='pend'&&g==='sched'))&&(!q||String(m.to).includes(q))});
+  $('d-rows').innerHTML=rows.length?`<table><thead><tr><th>Numéro</th><th>Statut</th><th>Détail</th><th>Mis à jour</th></tr></thead><tbody>${rows.slice(0,400).map(([k,m])=>`<tr><td class="mono">+${esc(m.to)}</td><td>${pill(m.group)}</td><td class="hint" style="margin:0">${esc(why(m))}</td><td class="hint" style="margin:0;white-space:nowrap">${dt(m.done||m.sent)}</td></tr>`).join('')}</tbody></table>${rows.length>400?`<p class="hint" style="padding:0 10px">400 premières lignes sur ${fmt(rows.length)}. Exportez en CSV pour tout voir.</p>`:''}`:`<div class="empty">Aucun SMS dans cette catégorie.</div>`}
+function resend(id){const c=camps.find(x=>x.id===id);const nums=Object.values(c.msgs).filter(m=>grp(m.group)==='fail').map(m=>m.to);
+  if(!nums.length)return toast('Aucun échec à renvoyer');closeDrawer();show('send');$('s-to').value=nums.join('\n');$('s-text').value=c.text;$('s-from').value=c.from;$('s-name').value=c.name+' (relance)';updCount();
+  toast(nums.length+' numéro(s) en échec chargés. Vérifiez puis envoyez.','ok',5000)}
+
+// ================= journaux =================
+async function loadLogs(){const p=new URLSearchParams({limit:$('l-lim').value});if($('l-to').value)p.set('to',norm($('l-to').value));if($('l-bulk').value)p.set('bulkId',$('l-bulk').value.trim());if($('l-st').value)p.set('generalStatus',$('l-st').value);
+  $('logs-tbl').innerHTML='<div class="empty">Chargement…</div>';
+  try{const r=await api('/sms/1/logs?'+p);lastLogs=r.results||[];
+    $('logs-tbl').innerHTML=lastLogs.length?`<div class="hint" style="padding:6px 10px">${fmt(lastLogs.length)} SMS trouvés</div><table><thead><tr><th>Date</th><th>Destinataire</th><th>Statut</th><th>Détail</th><th>SMS</th><th>Prix</th><th>Message</th></tr></thead><tbody>${lastLogs.map(m=>`<tr><td style="white-space:nowrap" class="hint">${dt(m.sentAt)}</td><td class="mono">+${esc(m.to)}<div class="hint" style="margin:0">de ${esc(m.from)}</div></td><td>${pill(m.status?.groupName)}</td><td class="hint" style="margin:0">${esc(NAMES[m.status?.name]||m.status?.description||'')}</td><td>${m.smsCount||''}</td><td class="mono" style="white-space:nowrap">${m.price?m.price.pricePerMessage+' '+m.price.currency:''}</td><td style="max-width:260px;font-size:12.5px">${esc((m.text||'').slice(0,100))}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">Aucun SMS trouvé avec ces filtres.</div>'}
+  catch(e){$('logs-tbl').innerHTML=`<div class="empty" style="color:var(--fail)">${I('alert')}<div>${esc(e.message)}</div></div>`}}
+function csv(rows,name){const s=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+s],{type:'text/csv'}));a.download=name;a.click()}
+function exportLogs(){if(!lastLogs.length)return toast('Rien à exporter','err');csv([['date','de','a','statut','detail','sms','prix','devise','message','bulkId','messageId'],...lastLogs.map(m=>[m.sentAt,m.from,m.to,ST[m.status?.groupName]?.l,NAMES[m.status?.name]||m.status?.name,m.smsCount,m.price?.pricePerMessage,m.price?.currency,m.text,m.bulkId,m.messageId])],'journaux-sms.csv')}
+function exportCamp(id){const c=camps.find(x=>x.id===id);csv([['numero','statut','detail','date','prix','devise','messageId'],...Object.entries(c.msgs).map(([k,m])=>[m.to,ST[m.group]?.l||m.group,why(m),m.done||m.sent||'',m.price||'',m.cur||'',k])],c.name.replace(/[^\w-]+/g,'_')+'.csv')}
+
+// ================= contacts =================
+readFile($('g-csv'),t=>{$('g-list').value=($('g-list').value.trim()+'\n'+t).trim();toast('Fichier importé','ok')});
+function saveGroup(){const name=$('g-name').value.trim();const{list,inv}=parseList($('g-list').value);if(!name)return toast('Donnez un nom au groupe','err');if(!list.length)return toast('Ajoutez au moins un numéro valide','err');
+  let g=groups.find(x=>x.name===name),added=list.length;if(g){const have=new Set(g.contacts.map(c=>c.num));added=0;list.forEach(c=>{if(!have.has(c.num)){g.contacts.push(c);added++}})}else groups.push({name,contacts:list});
+  S.set('groups',groups);$('g-list').value='';renderGroups();toast(added+' contact(s) ajouté(s) à « '+name+' »'+(inv?' · '+inv+' invalide(s)':''),'ok')}
+function renderGroups(){$('g-names').innerHTML=groups.map(g=>`<option value="${esc(g.name)}">`).join('');$('g-total').textContent=fmt(groups.reduce((a,g)=>a+g.contacts.length,0))+' contacts au total';
+  $('groups').innerHTML=groups.length?`<table><tbody>${groups.map((g,i)=>`<tr><td><div class="row" style="flex-wrap:nowrap;gap:12px"><div class="ph-av" style="margin:0;width:36px;height:36px;font-size:13px">${esc(g.name[0].toUpperCase())}</div><div><b>${esc(g.name)}</b><div class="hint" style="margin:0">${fmt(g.contacts.length)} contacts</div></div></div></td><td style="text-align:right;white-space:nowrap"><button class="btn sm ghost" title="Vérifier les numéros" onclick="lookupGroup(${i})">${I('shield')}</button> <button class="btn sm p" onclick="useGroup(${i})">${I('send')}Envoyer</button> <button class="btn sm ghost" title="Exporter" onclick="csv([['numero','nom'],...groups[${i}].contacts.map(c=>[c.num,c.nom])],'groupe.csv')">${I('download')}</button> <button class="btn sm ghost d" title="Supprimer" onclick="delGroup(${i})">${I('trash')}</button></td></tr>`).join('')}</tbody></table>`:`<div class="empty">${I('users')}<div>Aucun groupe. Créez-en un pour réutiliser vos listes.</div></div>`}
+function useGroup(i){show('send');$('s-to').value=groups[i].contacts.map(c=>c.num+(c.nom?';'+c.nom:'')).join('\n');updCount()}
+function delGroup(i){modal(`<h3>Supprimer « ${esc(groups[i].name)} » ?</h3><p class="hint">${fmt(groups[i].contacts.length)} contacts seront retirés de ce navigateur.</p><div class="row" style="margin-top:16px"><div class="sp"></div><button class="btn" onclick="closeModal()">Annuler</button><button class="btn p" style="background:var(--fail);box-shadow:none" onclick="groups.splice(${i},1);S.set('groups',groups);renderGroups();closeModal()">Supprimer</button></div>`)}
+
+// ================= statuts : page d'aide =================
+function trackHtml(){if(cfg.mode!=='proxy')return`<div class="info warn">${I('alert')}<div>Mode direct : pas de temps réel. Le dashboard interroge Infobip toutes les minutes (rapports et journaux).</div></div>`;
+  return srv.webhook?`<div class="info good">${I('check')}<div><b>Temps réel actif.</b> Infobip envoie chaque accusé de réception à <code>${esc(srv.publicUrl)}/webhook/dlr</code>. ${fmt(srv.stored||0)} accusé(s) reçu(s) jusqu'ici.</div></div>`
+  :`<div class="info">${I('radio')}<div><b>Temps réel inactif.</b> Les statuts sont récupérés toutes les minutes, ce qui suffit. Pour le temps réel, mettez le dashboard en ligne puis ajoutez <code>PUBLIC_URL=https://votre-site</code> dans <code>.env</code>.</div></div>`}
+function renderStatusPage(){$('trackState').innerHTML=trackHtml();
+  const rows=[['DELIVERED_TO_HANDSET','DELIVERED'],['PENDING_ACCEPTED','PENDING'],['PENDING_ENROUTE','PENDING'],['PENDING_WAITING_DELIVERY','PENDING'],['UNDELIVERABLE_REJECTED_OPERATOR','UNDELIVERABLE'],['EXPIRED_EXPIRED','EXPIRED'],['EXPIRED_DLR_UNKNOWN','EXPIRED'],['REJECTED_NOT_ENOUGH_CREDITS','REJECTED'],['REJECTED_SOURCE','REJECTED'],['REJECTED_PREFIX_MISSING','REJECTED'],['REJECTED_NETWORK','REJECTED'],['REJECTED_DESTINATION_NOT_REGISTERED','REJECTED']];
+  $('codes').innerHTML=`<table><thead><tr><th>Statut</th><th>Code Infobip</th><th>Signification</th></tr></thead><tbody>${rows.map(([n,g])=>`<tr><td>${pill(g)}</td><td><code>${n}</code></td><td>${esc(NAMES[n])}</td></tr>`).join('')}</tbody></table>`}
+
+// ================= paramètres =================
+function fillCfg(){$('c-mode').value=cfg.mode;$('c-base').value=cfg.base;$('c-key').value=cfg.key;$('c-from').value=cfg.from;$('c-cc').value=cfg.cc;$('c-direct').style.display=cfg.mode==='direct'?'block':'none';$('hookState').innerHTML=trackHtml()}
+$('c-mode').onchange=e=>$('c-direct').style.display=e.target.value==='direct'?'block':'none';
+function saveCfg(){cfg={...cfg,mode:$('c-mode').value,base:$('c-base').value.trim(),key:$('c-key').value.trim(),from:$('c-from').value.trim(),cc:$('c-cc').value.replace(/\D/g,'')};S.set('cfg',cfg);toast('Paramètres enregistrés','ok');loadBalance();loadSrv()}
+async function testConn(){saveCfg();try{const b=await api('/account/1/balance');toast('Connexion réussie · solde '+b.balance+' '+b.currency,'ok')}catch(e){
+  if(e.status===403){try{await api('/sms/1/logs?limit=1');toast('Connexion réussie, mais la clé ne peut pas lire le solde','info',6000);balHelp()}catch(e2){toast('Échec : '+e2.message,'err',6000)}}else toast('Échec : '+e.message,'err',6000)}}
+function exportAll(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({camps,groups},null,1)],{type:'application/json'}));a.download='mbote-sms-sauvegarde.json';a.click()}
+readFile($('imp'),t=>{try{const d=JSON.parse(t);camps=d.camps||camps;groups=d.groups||groups;save();S.set('groups',groups);toast('Données restaurées','ok');rerender()}catch(e){toast('Fichier invalide','err')}});
+function wipe(){modal(`<h3>Effacer l'historique ?</h3><p class="hint">Toutes les campagnes enregistrées dans ce navigateur seront supprimées. Les contacts sont conservés.</p><div class="row" style="margin-top:16px"><div class="sp"></div><button class="btn" onclick="closeModal()">Annuler</button><button class="btn p" style="background:var(--fail);box-shadow:none" onclick="camps=[];save();closeModal();toast('Historique effacé','ok')">Effacer</button></div>`)}
+
+// ================= opérateurs (RDC) =================
+const OPS=[['Vodacom',['81','82','83'],'#e60000'],['Orange',['80','84','85','89'],'#ff7900'],['Airtel',['97','98','99'],'#d1121b'],['Africell',['90','91'],'#7b2d8e']];
+function opOf(n){n=String(n||'');if(!n.startsWith('243'))return'International';const p=n.slice(3,5);for(const[o,ps]of OPS)if(ps.includes(p))return o;return'Autre'}
+function opTable(msgs,big){const m={};msgs.forEach(x=>{if(grp(x.group)==='sched')return;const o=opOf(x.to),t=m[o]||(m[o]={ok:0,pend:0,fail:0,sched:0,total:0});t[grp(x.group)]++;t.total++});
+  const rows=Object.entries(m).sort((a,b)=>b[1].total-a[1].total);
+  if(!rows.length)return big?'<div class="empty" style="padding:24px">Les statistiques apparaîtront après votre première campagne.</div>':'';
+  const body=rows.map(([o,s])=>{const rate=Math.round(s.ok/s.total*100),col=(OPS.find(x=>x[0]===o)||[])[2]||'var(--mute)';
+    return `<div class="oprow"><div class="opn"><i style="background:${col}"></i>${o}</div><div>${sbar(s)}</div><div class="mono opc">${fmt(s.total)} SMS</div><div class="mono opr" style="color:${rate>=80?'var(--ok)':rate>=50?'var(--ink)':'var(--fail)'}">${rate}%</div></div>`}).join('');
+  return big?body:`<div class="card" style="padding:14px 16px;margin-bottom:16px"><div class="hint" style="margin:0 0 2px;font-weight:700">Livraison par opérateur</div>${body}</div>`}
+
+// ================= liste d'exclusion =================
+const STOPW=/^(STOP|STOPP|ARRET|ARRÊT|DESABONNER|DÉSABONNER|DESINSCRIRE|UNSUBSCRIBE)\b/i;
+let blocked={};
+async function loadBlock(){if(cfg.mode==='proxy'){try{const r=await local('/local/blocklist');blocked={};(r.items||[]).forEach(i=>blocked[i.num]=i)}catch(e){}}else blocked=S.get('block',{});
+  if($('v-contacts').classList.contains('on'))renderBlock();if($('v-send').classList.contains('on'))updCount()}
+async function blockNums(nums,reason,remove){nums=[...new Set(nums.map(norm))].filter(n=>n.length>=9);if(!nums.length)return toast('Aucun numéro valide','err');
+  if(cfg.mode==='proxy'){try{const r=await fetch('/local/blocklist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(remove?{remove:nums}:{add:nums.map(num=>({num,reason}))})});if(!r.ok)throw new Error('HTTP '+r.status)}catch(e){return toast('Erreur : '+e.message,'err')}}
+  else{nums.forEach(n=>{if(remove)delete blocked[n];else blocked[n]={num:n,reason,at:new Date().toISOString(),source:'manuel'}});S.set('block',blocked)}
+  await loadBlock();toast(remove?'Numéro retiré de la liste d\'exclusion':nums.length+' numéro(s) exclu(s) des campagnes','ok');if($('v-inbox').classList.contains('on'))renderInbox()}
+function addBlockFromInput(){blockNums($('bl-add').value.split(/[\s,;]+/).filter(x=>/\d/.test(x)),'Ajout manuel');$('bl-add').value=''}
+function renderBlock(){const items=Object.values(blocked).sort((a,b)=>String(b.at).localeCompare(String(a.at)));$('bl-count').textContent=fmt(items.length)+' numéro'+(items.length>1?'s':'');
+  $('bl-list').innerHTML=items.length?`<table><tbody>${items.map(i=>`<tr><td class="mono">+${esc(i.num)}</td><td><span class="hint" style="margin:0">${esc(i.reason||'')}</span>${i.source==='auto'?' <span class="pill fail">STOP</span>':''}</td><td class="hint" style="white-space:nowrap">${dt(i.at)}</td><td style="text-align:right"><button class="btn sm ghost" onclick="blockNums(['${esc(i.num)}'],'',true)">Retirer</button></td></tr>`).join('')}</tbody></table>`:'<div class="empty" style="padding:20px">Aucun numéro exclu pour l\'instant.</div>'}
+
+// ================= boîte de réception =================
+let inboxMsgs=[],inboxErr='',inboxHook='';
+async function loadInbox(manual){
+  try{if(cfg.mode==='proxy'){const r=await local('/local/inbox');inboxMsgs=r.results||[];inboxErr=r.error||'';inboxHook=r.inboundUrl||'';if(r.blockedAdded){await loadBlock();toast(r.blockedAdded+' nouveau(x) désabonnement(s) STOP','info',5000)}}
+    else{const r=await api('/sms/1/inbox/reports?limit=1000'),st=S.get('inbox',{});let nb=0;
+      (r.results||[]).forEach(m=>{if(st[m.messageId])return;st[m.messageId]=m;if(m.from&&STOPW.test(String(m.cleanText||m.text||'').trim())&&!blocked[m.from]){blocked[m.from]={num:m.from,reason:'A répondu STOP',at:new Date().toISOString(),source:'auto'};nb++}});
+      if(nb)S.set('block',blocked);S.set('inbox',st);inboxMsgs=Object.values(st).sort((a,b)=>new Date(b.receivedAt)-new Date(a.receivedAt));inboxErr=''}}
+  catch(e){inboxErr=e.message}
+  const seen=S.get('inboxSeen',0),n=inboxMsgs.filter(m=>new Date(m.receivedAt).getTime()>seen).length;
+  if($('v-inbox').classList.contains('on'))renderInbox();else{$('inboxBadge').hidden=!n;$('inboxBadge').textContent=n}
+  if(manual)toast(inboxErr?'Erreur : '+inboxErr:'Boîte de réception à jour',inboxErr?'err':'ok')}
+function renderInbox(){const seen=S.get('inboxSeen',0);S.set('inboxSeen',Date.now());$('inboxBadge').hidden=true;
+  const names={};groups.forEach(g=>g.contacts.forEach(c=>{if(c.nom)names[c.num]=c.nom}));
+  const today=new Date();today.setHours(0,0,0,0);const isStop=m=>STOPW.test(String(m.cleanText||m.text||'').trim());
+  $('ib-total').textContent=fmt(inboxMsgs.length);$('ib-today').textContent=fmt(inboxMsgs.filter(m=>new Date(m.receivedAt)>=today).length);$('ib-stop').textContent=fmt(inboxMsgs.filter(isStop).length);
+  $('ib-err').innerHTML=inboxErr?`<div class="info warn" style="margin-bottom:14px">${I('alert')}<div>Infobip a répondu : ${esc(inboxErr)}</div></div>`:'';
+  $('ib-hook').innerHTML=inboxHook?`<br>Pour les recevoir instantanément, indiquez cette adresse de transfert sur votre numéro dans le portail Infobip : <code>${esc(inboxHook)}</code>`:'';
+  const q=($('ib-q').value||'').toLowerCase().trim(),qd=q.replace(/\D/g,'');
+  const list=inboxMsgs.filter(m=>!q||(qd&&String(m.from).includes(qd))||String(m.text||'').toLowerCase().includes(q)||String(names[m.from]||'').toLowerCase().includes(q));
+  $('inbox-list').innerHTML=list.length?list.slice(0,300).map(m=>{const f=String(m.from||'').replace(/[^\d]/g,''),nm=names[f],stop=isStop(m),isNew=new Date(m.receivedAt).getTime()>seen;
+    return `<div class="msgi ${isNew?'new':''}"><div class="ph-av" style="margin:0;width:40px;height:40px">${esc((nm||'#')[0].toUpperCase())}</div>
+    <div style="min-width:0"><div class="row" style="gap:8px"><b>${esc(nm||'+'+f)}</b>${nm?`<span class="hint" style="margin:0">+${f}</span>`:''}<span class="hint" style="margin:0">· ${opOf(f)}</span>${stop?'<span class="pill fail">Désabonnement</span>':blocked[f]?'<span class="pill fail">Exclu</span>':''}${isNew?'<span class="pill sched">Nouveau</span>':''}</div>
+    <div style="white-space:pre-wrap;margin-top:5px;word-break:break-word">${esc(m.text||m.cleanText||'')}</div><div class="hint">Reçu sur ${esc(m.to||'')} · ${dt(m.receivedAt)}${m.keyword?' · mot-clé '+esc(m.keyword):''}</div></div>
+    <div class="row" style="flex-wrap:nowrap"><button class="btn sm" onclick="reply('${f}')">${I('reply')}Répondre</button>${blocked[f]?'':`<button class="btn sm ghost d" title="Exclure des campagnes" onclick="blockNums(['${f}'],'Exclu depuis la boîte de réception')">${I('ban')}</button>`}</div></div>`}).join('')
+    :`<div class="empty">${I('inbox')}<div><b style="color:var(--ink)">${inboxMsgs.length?'Aucun message ne correspond.':'Aucun SMS reçu pour l\'instant'}</b></div><p>${inboxMsgs.length?'':'Les réponses de vos contacts apparaîtront ici.'}</p></div>`}
+$('ib-q').oninput=renderInbox;
+function reply(num){modal(`<div class="ch"><div class="kpi"><div class="ico b" style="margin:0">${I('reply')}</div></div><div><h3>Répondre à +${esc(num)}</h3><p>Le SMS est envoyé et facturé immédiatement.</p></div></div>
+  <label class="f">Expéditeur</label><input id="r-from" value="${esc(cfg.from||$('s-from').value||'')}"><label class="f">Message</label><textarea id="r-text" style="min-height:100px"></textarea><div class="hint" id="r-c"></div>
+  <div class="row" style="margin-top:16px"><div class="sp"></div><button class="btn" onclick="closeModal()">Annuler</button><button class="btn p" id="r-go">${I('send')}Envoyer</button></div>`);
+  $('r-text').oninput=()=>{const s=segInfo($('r-text').value);$('r-c').textContent=s.len+' caractères · '+s.seg+' SMS'};setTimeout(()=>$('r-text').focus(),50);
+  $('r-go').onclick=async()=>{const from=$('r-from').value.trim(),text=$('r-text').value.trim();if(!from||!text)return toast('Expéditeur et message requis','err');$('r-go').disabled=true;
+    try{const msg={from,destinations:[{to:num}],text};if(srv.notifyUrl&&cfg.mode==='proxy'){msg.notifyUrl=srv.notifyUrl;msg.notifyContentType='application/json'}
+      await api('/sms/2/text/advanced',{method:'POST',body:JSON.stringify({messages:[msg]})});closeModal();toast('Réponse envoyée à +'+num,'ok')}catch(e){$('r-go').disabled=false;toast('Erreur : '+e.message,'err',6000)}}}
+
+// ================= vérification des numéros =================
+function lookup(nums,onRemove){nums=[...new Set(nums)];if(!nums.length)return toast('Aucun numéro à vérifier','err');
+  modal(`<div class="ch"><div class="kpi"><div class="ico b" style="margin:0">${I('shield')}</div></div><div><h3>Vérifier ${fmt(nums.length)} numéro${nums.length>1?'s':''}</h3><p>Avant d'envoyer, sans envoyer de SMS</p></div></div>
+  <div id="lk-body"><p style="margin-top:0">Infobip interroge les opérateurs pour savoir si chaque numéro est <b>actif</b>, et sur quel <b>réseau</b> il se trouve vraiment (portabilité incluse). Vous évitez de payer des SMS qui n'arriveront jamais.</p>
+  <div class="info warn">${I('wallet')}<div>Chaque vérification est facturée par Infobip, généralement bien moins cher qu'un SMS. Consultez votre tarif dans le portail.</div></div>
+  <div class="row" style="margin-top:16px"><div class="sp"></div><button class="btn" onclick="closeModal()">Annuler</button><button class="btn p" id="lk-go">${I('shield')}Lancer la vérification</button></div></div>`);
+  $('lk-go').onclick=async()=>{const res=[];$('lk-body').innerHTML='<div class="bar"><i id="lk-bar"></i></div><div class="hint" id="lk-p">Démarrage…</div>';
+    for(let i=0;i<nums.length;i+=100){try{const r=await api('/number/1/query',{method:'POST',body:JSON.stringify({to:nums.slice(i,i+100)})});res.push(...(r.results||[]))}
+      catch(e){$('lk-body').innerHTML=`<div class="info warn">${I('alert')}<div>${esc(e.message)}</div></div><div class="row" style="margin-top:14px"><div class="sp"></div><button class="btn" onclick="closeModal()">Fermer</button></div>`;return}
+      const d=Math.min(nums.length,i+100);$('lk-bar').style.width=(d/nums.length*100)+'%';$('lk-p').textContent=fmt(d)+' / '+fmt(nums.length)+' vérifiés'}
+    const ok=[],bad=[],unk=[],nets={};
+    res.forEach(m=>{const g=m.status?.groupName;(g==='DELIVERED'?ok:['UNDELIVERABLE','REJECTED'].includes(g)?bad:unk).push(m);const n=(m.ported&&m.portedNetwork?.networkName)||m.originalNetwork?.networkName||'Inconnu';if(g==='DELIVERED')nets[n]=(nets[n]||0)+1});
+    window._lk=res;const ported=res.filter(m=>m.ported).length;
+    $('lk-body').innerHTML=`<div class="lk"><div><b style="color:var(--ok)">${fmt(ok.length)}</b><span>actifs</span></div><div><b style="color:var(--fail)">${fmt(bad.length)}</b><span>invalides ou inactifs</span></div><div><b style="color:var(--pend)">${fmt(unk.length)}</b><span>non déterminés</span></div></div>
+      ${Object.keys(nets).length?`<div class="hint" style="font-weight:700;margin-bottom:6px">Réseaux réels des numéros actifs${ported?' · '+ported+' numéro(s) porté(s)':''}</div><div class="counter" style="margin:0 0 12px">${Object.entries(nets).sort((a,b)=>b[1]-a[1]).map(([n,c])=>`<span class="tagc">${esc(n)} ${fmt(c)}</span>`).join('')}</div>`:''}
+      ${bad.length?`<div class="tw" style="max-height:200px;overflow:auto;border:1px solid var(--line);border-radius:12px"><table><tbody>${bad.slice(0,100).map(m=>`<tr><td class="mono">+${esc(m.to)}</td><td class="hint" style="margin:0">${esc(m.error?.description||m.status?.description||m.status?.name||'')}</td></tr>`).join('')}</tbody></table></div>`:''}
+      <div class="row" style="margin-top:16px"><button class="btn sm" onclick="exportLookup()">${I('download')}CSV</button><div class="sp"></div><button class="btn" onclick="closeModal()">Fermer</button>${bad.length&&onRemove?`<button class="btn p" id="lk-rm">${I('trash')}Retirer les invalides (${fmt(bad.length)})</button>`:''}</div>`;
+    if(bad.length&&onRemove)$('lk-rm').onclick=()=>{onRemove(bad.map(m=>String(m.to)));closeModal();toast(bad.length+' numéro(s) invalide(s) retiré(s)','ok')}}}
+function exportLookup(){csv([['numero','resultat','reseau','porte','detail'],...(window._lk||[]).map(m=>[m.to,m.status?.groupName,(m.ported&&m.portedNetwork?.networkName)||m.originalNetwork?.networkName||'',m.ported?'oui':'non',m.error?.description||m.status?.description||''])],'verification-numeros.csv')}
+function lookupSend(){const{list}=parseList($('s-to').value,true);lookup(list.map(c=>c.num),bad=>{const set=new Set(bad);$('s-to').value=$('s-to').value.split(/\r?\n/).filter(l=>{const n=l.split(/[;,\t]/)[0];return!/\d/.test(n)||!set.has(norm(n))}).join('\n');updCount()})}
+function lookupGroup(i){lookup(groups[i].contacts.map(c=>c.num),bad=>{const set=new Set(bad);groups[i].contacts=groups[i].contacts.filter(c=>!set.has(c.num));S.set('groups',groups);renderGroups()})}
+
+// ================= modèles de messages =================
+let tpls=S.get('tpls',[]);
+function renderTpls(){$('s-tpl').innerHTML='<option value="">Utiliser un modèle…</option>'+tpls.map((t,i)=>`<option value="${i}">${esc(t.name)}</option>`).join('')}
+$('s-tpl').onchange=e=>{const t=tpls[e.target.value];if(t){$('s-text').value=t.text;updCount();toast('Modèle « '+t.name+' » chargé','ok')}};
+function saveTpl(){const text=$('s-text').value.trim();if(!text)return toast('Écrivez d\'abord le message','err');
+  modal(`<h3>Enregistrer comme modèle</h3><label class="f">Nom du modèle</label><input id="tp-n" placeholder="Ex. Rappel de paiement"><div class="row" style="margin-top:16px"><div class="sp"></div><button class="btn" onclick="closeModal()">Annuler</button><button class="btn p" id="tp-go">${I('check')}Enregistrer</button></div>`);
+  setTimeout(()=>$('tp-n').focus(),50);$('tp-go').onclick=()=>{const name=$('tp-n').value.trim();if(!name)return toast('Donnez un nom','err');const i=tpls.findIndex(t=>t.name===name);if(i>=0)tpls[i].text=text;else tpls.push({name,text});S.set('tpls',tpls);renderTpls();closeModal();toast('Modèle enregistré','ok')}}
+function delTpl(){const i=$('s-tpl').value;if(i==='')return toast('Choisissez d\'abord le modèle à supprimer','err');const n=tpls[i].name;tpls.splice(i,1);S.set('tpls',tpls);renderTpls();toast('Modèle « '+n+' » supprimé','ok')}
+
+// ================= reprogrammer =================
+function reschedule(id){const c=camps.find(x=>x.id===id),d=new Date(c.sendAt),v=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  modal(`<div class="ch"><div class="kpi"><div class="ico v" style="margin:0">${I('calendar')}</div></div><div><h3>Reprogrammer</h3><p>${esc(c.name)} · ${fmt(c.total)} destinataires</p></div></div><label class="f">Nouvelle date d'envoi</label><input type="datetime-local" id="rs-at" value="${v}"><div class="row" style="margin-top:16px"><div class="sp"></div><button class="btn" onclick="closeModal()">Annuler</button><button class="btn p" id="rs-go">${I('check')}Reprogrammer</button></div>`);
+  $('rs-go').onclick=async()=>{const at=$('rs-at').value;if(!at||new Date(at)<new Date())return toast('Choisissez une date dans le futur','err');const iso=new Date(at).toISOString();let ok=0;
+    for(const b of c.bulkIds){try{await api('/sms/1/bulks?bulkId='+enc(b),{method:'PUT',body:JSON.stringify({sendAt:iso})});ok++}catch(e){toast('Erreur : '+e.message,'err',6000)}}
+    if(ok){c.sendAt=iso;save();closeModal();rerender();toast('Campagne reprogrammée au '+dt(iso),'ok')}}}
+
+// ================= modale =================
+function modal(h){$('mbody').innerHTML=h;$('modal').classList.add('on')}function closeModal(){$('modal').classList.remove('on')}
+$('modal').onclick=e=>{if(e.target.id==='modal')closeModal()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeDrawer();$('side').classList.remove('open')}});
+
+// ================= démarrage =================
+async function loadSrv(){if(cfg.mode!=='proxy'){srv={webhook:false};return}try{srv=await local('/local/config')}catch(e){srv={webhook:false}}}
+(async()=>{renderDash();await loadSrv();loadBalance();await loadBlock();refreshCampaigns(false);loadInbox(false)})();
+setInterval(()=>document.visibilityState==='visible'&&loadInbox(false),120000);
+setInterval(()=>{if(document.visibilityState==='visible'){refreshCampaigns(false);if($('v-dash').classList.contains('on'))$('lastUpd').textContent='Statuts actualisés '+ago(lastRefresh)+(srv.webhook?' · temps réel actif':'')}},60000);
+setInterval(()=>document.visibilityState==='visible'&&loadBalance(),300000);
+</script>
+</body>
+</html>

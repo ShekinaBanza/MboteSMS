@@ -1,0 +1,8 @@
+{
+  "name": "infobip-sms-dashboard",
+  "version": "1.0.0",
+  "description": "Dashboard d'envoi SMS en masse et de suivi pour Infobip",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}
